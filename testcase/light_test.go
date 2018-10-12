@@ -48,7 +48,7 @@ func Test_Light_AccountCase(t *testing.T) {
 		fmt.Println("light getbalance =", string(output))
 	}
 
-	accountCase(CmdLight, Account1, AccountMix1, t)
+	accountCase(CmdLight, Account2, AccountMix2, t)
 }
 
 func Test_Light_GetErrBlock(t *testing.T) {
@@ -120,5 +120,59 @@ func Test_Light_GetBlockHeight(t *testing.T) {
 		t.Fatalf("getblockheight error, %s", err)
 	} else {
 		fmt.Println("light getblockheight ok.")
+	}
+
+	cmd = exec.Command(CmdLight, "getblockheight", "100", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblockheight returns ok with invalid parameter")
+	} else {
+		fmt.Println("light getblockheight invalid parameter test ok.")
+	}
+}
+
+func Test_Light_GetErrBlockTXCount(t *testing.T) {
+	// invalid height
+	cmd := exec.Command(CmdLight, "getblocktxcount", "--height", "100000000", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblocktxcount error parameter success?")
+	} else {
+		fmt.Println("light getblocktxcount for invalid parameter. err =", err)
+	}
+
+	cmd = exec.Command(CmdLight, "getblocktxcount", "--hash", BlockHashErr, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblocktxcount error parameter success?")
+	} else {
+		fmt.Println("light getblocktxcount for invalid parameter. err =", err)
+	}
+
+	cmd = exec.Command(CmdLight, "getblocktxcount", "--hash", "0x", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblocktxcount error parameter success?")
+	} else {
+		fmt.Println("light getblocktxcount for invalid parameter. err =", err)
+	}
+
+	cmd = exec.Command(CmdLight, "getblocktxcount", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblock error parameter success?")
+	} else {
+		fmt.Println("light getblock for invalid parameter. err =", err)
+	}
+}
+
+func Test_Light_GetBlockTXCount(t *testing.T) {
+	cmd := exec.Command(CmdLight, "getblocktxcount", "--height", "0", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblocktxcount error, %s", err)
+	} else {
+		fmt.Println("light getblocktxcount by height ok.")
+	}
+
+	cmd = exec.Command(CmdLight, "getblocktxcount", "--hash", BlockHash, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblocktxcount error, %s", err)
+	} else {
+		fmt.Println("light getblocktxcount by hash ok.")
 	}
 }

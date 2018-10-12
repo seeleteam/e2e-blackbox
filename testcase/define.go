@@ -22,14 +22,3 @@ var (
 	BlockHash    string = "0x02ffd2ac0921f7784d0d3f6d7865e48ec0e454dbd7dc60e4ecf6eaa08c548410"
 	BlockHashErr string = "0x88aad2ac0921f7784d0d3f6d7865e48ec0e454dbd7dc60e4ecf6eaa08c548410"
 )
-
-/*
-func main() {
-	fmt.Println("hello owr")
-
-	cmd := exec.Command("./node", "--help")
-	out, err := cmd.CombinedOutput()
-	fmt.Println(string(out), err)
-
-}
-*/
