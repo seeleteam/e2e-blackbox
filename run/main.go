@@ -86,9 +86,9 @@ func do(today string) {
 		message += "😦 ppears to be a bug!\n\n"
 	} else {
 		message += "😁 Good day with no error~\n\n"
+		attachFile = append(attachFile, CoverFileName+".html")
 	}
 
-	attachFile = append(attachFile, CoverFileName+".html")
 	// message += PrintSpecifiedPkg(yesterday, specified)
 	message += "\n\n============= Go cover seele completed. ===============\n" + coverResult
 
@@ -98,7 +98,7 @@ func do(today string) {
 func Run() (all string, specified map[string]string) {
 	specified = make(map[string]string)
 	// go test github.com/seeleteam/go-seele/... -coverprofile=seele_cover
-	coverbyte, err := exec.Command("go", "test", "../...", "-v", "-coverprofile="+CoverFileName).CombinedOutput()
+	coverbyte, err := exec.Command("go", "test", "./...", "-v", "-coverprofile="+CoverFileName).CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("cover FAIL: %s %s", err, string(coverbyte)), nil
 	}
