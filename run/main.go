@@ -83,7 +83,7 @@ func do(today string) {
 	fmt.Println("saved data")
 	message := ""
 	if strings.Contains(coverResult, "FAIL") {
-		message += "😦 appears to be a bug!\n\n"
+		message += "😦 😦 😦 discover bug!\n\n"
 	} else {
 		message += "😁 Good day with no error~\n\n"
 		attachFile = append(attachFile, CoverFileName+".html")
