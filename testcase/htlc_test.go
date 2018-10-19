@@ -93,7 +93,7 @@ func Test_HTLC_Create_Available_Gas(t *testing.T) {
 	}
 
 	for {
-		time.Sleep(20)
+		time.Sleep(10)
 		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
 		if err != nil {
 			t.Fatalf("Test_HTLC_Create_Available_Gas get pool count err: %s", err)
