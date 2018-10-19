@@ -28,7 +28,7 @@ const (
 	CoverFileName = "seele_coverage_detail"
 	CoverPackage  = "common\t,core\t,trie\t,p2p\t,seele\t"
 
-	Subject    = "Daily Test Report"
+	Subject    = "Daily CMD Commands Test Report"
 	Sender     = "send@email.com"
 	Password   = "password"
 	SenderName = "reporter"
@@ -83,14 +83,14 @@ func do(today string) {
 	fmt.Println("saved data")
 	message := ""
 	if strings.Contains(coverResult, "FAIL") {
-		message += "😦 ppears to be a bug!\n\n"
+		message += "😦 appears to be a bug!\n\n"
 	} else {
 		message += "😁 Good day with no error~\n\n"
 		attachFile = append(attachFile, CoverFileName+".html")
 	}
 
 	// message += PrintSpecifiedPkg(yesterday, specified)
-	message += "\n\n============= Go cover seele completed. ===============\n" + coverResult
+	message += "\n\n============= Go cover seele cmd commands completed. ===============\n" + coverResult
 
 	sendEmail(message, attachFile)
 }
