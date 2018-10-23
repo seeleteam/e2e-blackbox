@@ -15,8 +15,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 // gas is too low
@@ -83,7 +81,9 @@ func Test_HTLC_Create_Available_Gas(t *testing.T) {
 	cmd.Wait()
 
 	output, errStr := out.String(), outErr.String()
-	assert.Equal(t, "", errStr)
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Create_Available_Gas cmd err: %s", errStr)
+	}
 
 	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
 	// fmt.Println("str:", str)
@@ -125,15 +125,76 @@ func Test_HTLC_Create_Available_Gas(t *testing.T) {
 	}
 
 	htlcCreateResult, err := htlcDecode(t, CmdClient, receipt.Result)
-	assert.Equal(t, nil, err)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Create_Available_Gas htlc decode err: %s", err)
+	}
 
-	assert.Equal(t, false, htlcCreateResult.Withdrawed)
-	assert.Equal(t, false, htlcCreateResult.Refunded)
-	assert.Equal(t, "", htlcCreateResult.Preimage)
-	assert.Equal(t, amount, htlcCreateResult.Tx.TxData.Amount)
-	assert.Equal(t, AccountShard1_1, htlcCreateResult.Tx.TxData.From)
-	assert.Equal(t, AccountShard1_2, htlcCreateResult.To)
-	assert.Equal(t, Secretehash, htlcCreateResult.HashLock)
-	assert.Equal(t, locktime, htlcCreateResult.TimeLock)
+	if htlcCreateResult.Withdrawed {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc withdrawed")
+	}
 
+	if htlcCreateResult.Refunded {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc refunded")
+	}
+
+	if htlcCreateResult.Preimage != "" {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc preimage is not empty")
+	}
+
+	if amount != htlcCreateResult.Tx.TxData.Amount {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc amount is not equal to what has been set")
+	}
+
+	if AccountShard1_1 != htlcCreateResult.Tx.TxData.From {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc sender is not equal to what has been set")
+	}
+
+	if AccountShard1_2 != htlcCreateResult.To {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc receiver is not equal to what has been set")
+	}
+
+	if Secretehash != htlcCreateResult.HashLock {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc secrete hash is not equal to what has been set")
+	}
+
+	if locktime != htlcCreateResult.TimeLock {
+		t.Fatal("Test_HTLC_Create_Available_Gas htlc locked time is not equal to what has been set")
+	}
+
+}
+
+func Test_HTLC_Create_Low_Balance(t *testing.T) {
+
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Create_Low_Balance get balance err: %s", err)
+	}
+
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(beginBalance, 10), "--price", "15",
+		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "balance is not enough") {
+		t.Fatalf("Test_HTLC_Create_Low_Balance Err:%s", errStr)
+	}
 }

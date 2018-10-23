@@ -16,8 +16,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 type BalanceInfo struct {
@@ -227,7 +225,10 @@ func getReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo,
 	}
 
 	output, errStr := out.String(), outErr.String()
-	assert.Equal(t, "", errStr)
+	if "" != errStr {
+		return nil, errors.New("Failed to get receipt")
+	}
+
 	var info ReceiptInfo
 	if err := json.Unmarshal([]byte(output), &info); err != nil {
 		return nil, err
