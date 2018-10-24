@@ -358,15 +358,19 @@ func Test_HTLC_Create_Invalid_Amount_Less_Than_Zero(t *testing.T) {
 		fmt.Println(err)
 	}
 	defer stdin.Close()
+
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
+
 	if err = cmd.Start(); err != nil {
 		t.Fatalf("Test_HTLC_Create_Invalid_Amount_Less_Than_Zero: An error occured: %s", err)
 	}
+
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 	_, errStr := out.String(), outErr.String()
+
 	if !strings.Contains(errStr, "amount is negative") {
 		t.Fatalf("Test_HTLC_Create_Invalid_Amount_Less_Than_Zero Err:%s", errStr)
 	}
@@ -376,19 +380,25 @@ func Test_HTLC_Create_Invalid_Amount(t *testing.T) {
 	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", "0op", "--price", "15",
 		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
 	stdin, err := cmd.StdinPipe()
+
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	defer stdin.Close()
+
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
+
 	if err = cmd.Start(); err != nil {
 		t.Fatalf("Test_HTLC_Create_Invalid_Amount: An error occured: %s", err)
 	}
+
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 	_, errStr := out.String(), outErr.String()
+
 	if !strings.Contains(errStr, "invalid amount value") {
 		t.Fatalf("Test_HTLC_Create_Invalid_Amount Err:%s", errStr)
 	}
@@ -399,6 +409,7 @@ func Test_HTLC_Withdraw_Available_Gas(t *testing.T) {
 	locktime := generateTime(5)
 	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -406,49 +417,63 @@ func Test_HTLC_Withdraw_Available_Gas(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	if err = cmd.Start(); err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas: An error occured: %s", err)
 	}
+
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 	stdin.Close()
+
 	output, errStr := out.String(), outErr.String()
 	if errStr != "" {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas cmd err: %s", errStr)
 	}
+
 	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
 	var createInfo HTLCCreateInfo
+
 	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas unmarshal created htlc tx err: %s", err)
 	}
-	beginBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_2, ServerAddr)
 	if err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas get balance err: %s", err)
 	}
+
 	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_2, "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
 	out.Reset()
 	outErr.Reset()
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 	stdin, err = cmd.StdinPipe()
+
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	defer stdin.Close()
+
 	if err = cmd.Start(); err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas: An error occured: %s", err)
 	}
+
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 	output, errStr = out.String(), outErr.String()
 	if errStr != "" {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas cmd err: %s", errStr)
 	}
+
 	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
 	var withdrawInfo HTLCWithDrawInfo
+
 	if err := json.Unmarshal([]byte(str), &withdrawInfo); err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas unmarshal created htlc tx err: %s", err)
 	}
+
 	for {
 		time.Sleep(10)
 		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
@@ -459,46 +484,59 @@ func Test_HTLC_Withdraw_Available_Gas(t *testing.T) {
 			break
 		}
 	}
+
 	time.Sleep(10)
 	receipt, err := GetReceipt(t, CmdClient, withdrawInfo.Tx.Hash, ServerAddr)
 	if err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas get receipt err: %s", err)
 	}
+
 	if receipt.Failed {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas tx operation fault")
 	}
+
 	currentBalance, err := getBalance(t, CmdClient, AccountShard1_2, ServerAddr)
 	if err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas get balance err: %s", err)
 	}
+
 	if (receipt.TotalFee + currentBalance - amount) != beginBalance {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas balance is not equal")
 	}
+
 	htlcWithdrawResult, err := htlcDecode(t, CmdClient, receipt.Result)
 	if err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas htlc decode err: %s", err)
 	}
+
 	if !htlcWithdrawResult.Withdrawed {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc withdrawed")
 	}
+
 	if htlcWithdrawResult.Refunded {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc refunded")
 	}
+
 	if htlcWithdrawResult.Preimage != Secret {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc preimage is not equal")
 	}
+
 	if amount != htlcWithdrawResult.Tx.TxData.Amount {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc amount is not equal to what has been set")
 	}
+
 	if AccountShard1_1 != htlcWithdrawResult.Tx.TxData.From {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc sender is not equal to what has been set")
 	}
+
 	if AccountShard1_2 != htlcWithdrawResult.To {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc receiver is not equal to what has been set")
 	}
+
 	if Secretehash != htlcWithdrawResult.HashLock {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc secrete hash is not equal to what has been set")
 	}
+
 	if locktime != htlcWithdrawResult.TimeLock {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc locked time is not equal to what has been set")
 	}
