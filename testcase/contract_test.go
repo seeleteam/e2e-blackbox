@@ -13,7 +13,14 @@ var bins = []string{
 }
 
 func Test_DeployContract(t *testing.T) {
-	txHash, _, err1 := SendTx(t, CmdClient, 0, 0, 0, KeyFileShard1_1, "", bins[0], ServerAddr)
+	for _, bin := range bins {
+		deployContracts(t, CmdClient, bin)
+		deployContracts(t, CmdLight, bin)
+	}
+}
+
+func deployContracts(t *testing.T, command, contract string) {
+	txHash, _, err1 := SendTx(t, command, 0, 0, 0, KeyFileShard1_1, "", contract, ServerAddr)
 	assert.NoError(t, err1)
 	if txHash == "" {
 		t.Fatal("tx hash is empty")
@@ -21,7 +28,7 @@ func Test_DeployContract(t *testing.T) {
 
 	timeoutC := time.After(120 * time.Second)
 	for {
-		receipt, err2 := GetReceipt(t, CmdClient, txHash, ServerAddr)
+		receipt, err2 := GetReceipt(t, command, txHash, ServerAddr)
 		if receipt != nil && receipt.Failed == false {
 			break
 		}
