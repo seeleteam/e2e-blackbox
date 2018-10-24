@@ -28,7 +28,7 @@ const (
 	CoverFileName = "seele_coverage_detail"
 	CoverPackage  = "common\t,core\t,trie\t,p2p\t,seele\t"
 
-	Subject    = "Daily CMD Commands Test Report"
+	Subject    = "Daily Blackbox E2E Test Report"
 	Sender     = "send@email.com"
 	Password   = "password"
 	SenderName = "reporter"
