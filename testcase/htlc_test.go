@@ -106,7 +106,7 @@ func Test_HTLC_Create_Available_Gas(t *testing.T) {
 
 	time.Sleep(20)
 
-	receipt, err := getReceipt(t, CmdClient, createInfo.Tx.Hash, ServerAddr)
+	receipt, err := GetReceipt(t, CmdClient, createInfo.Tx.Hash, ServerAddr)
 	if err != nil {
 		t.Fatalf("Test_HTLC_Create_Available_Gas get receipt err: %s", err)
 	}

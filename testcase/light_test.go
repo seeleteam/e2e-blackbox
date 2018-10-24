@@ -258,7 +258,7 @@ func Test_Light_GetReceipt(t *testing.T) {
 
 	for cnt := 0; cnt < 100; cnt++ {
 		itemNonce := curNonce + 2 + cnt
-		txHash, _, err = sentTX(t, CmdLight, 10000, itemNonce, KeyFileShard1_1, AccountShard1_2, ServerAddr)
+		txHash, _, err = SendTx(t, CmdLight, 10000, itemNonce, 0, KeyFileShard1_1, AccountShard1_2, "", ServerAddr)
 		if err != nil {
 			t.Fatalf("Test_Light_SendTx: An error occured: %s", err)
 		}
@@ -295,9 +295,9 @@ func Test_Light_GetReceipt(t *testing.T) {
 
 			//
 			//var receiptInfo *ReceiptInfo
-			_, err3 := getReceipt(t, CmdLight, sendTxInfo.hash, ServerAddr)
+			_, err3 := GetReceipt(t, CmdLight, sendTxInfo.hash, ServerAddr)
 			if err3 == nil {
-				//t.Fatalf("getReceipt err:%s", err3)
+				//t.Fatalf("GetReceipt err:%s", err3)
 				sendTxInfo.bMined = true
 			} else {
 				bAllMined = false
