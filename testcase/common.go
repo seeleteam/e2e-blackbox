@@ -182,7 +182,7 @@ func SendTx(t *testing.T, command string, amount, nonce, gaslimit int, keystore,
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	fmt.Println("sendtx out:[", outStr, "]")
+	// fmt.Println("sendtx out:[", outStr, "]")
 	var txInfo TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
