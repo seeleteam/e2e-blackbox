@@ -18,16 +18,19 @@ import (
 	"time"
 )
 
+// BalanceInfo balance
 type BalanceInfo struct {
 	Account string
 	Balance int64
 }
 
+// BlockInfo block
 type BlockInfo struct {
 	Hash         string        `json:"hash"`
 	Transactions []interface{} `json:"transactions"`
 }
 
+// TxDataInfo tx data
 type TxDataInfo struct {
 	From     string
 	To       string
@@ -36,11 +39,13 @@ type TxDataInfo struct {
 	GasLimit int64
 }
 
+// TxInfo tx
 type TxInfo struct {
 	Hash   string     `json:"hash"`
 	TxData TxDataInfo `json:"Data"`
 }
 
+// HTLCSystemInfo htlc system
 type HTLCSystemInfo struct {
 	Tx         TxInfo `json:"Tx"`
 	HashLock   string `json:"HashLock"`
@@ -51,18 +56,22 @@ type HTLCSystemInfo struct {
 	Preimage   string `json:"Preimage"`
 }
 
+// HTLCCreateInfo htlc create
 type HTLCCreateInfo struct {
 	Tx       TxInfo `json:"Tx"`
 	HashLock string `json:"HashLock"`
 	TimeLock int64  `json:"TimeLock"`
 }
+
+// ReceiptInfo receipt
 type ReceiptInfo struct {
 	Failed   bool   `json:"failed"`
 	TotalFee int64  `json:"totalFee"`
 	UsedGas  int64  `json:"usedGas"`
-	Result   string `json:"result`
+	Result   string `json:"result"`
 }
 
+// PoolTxInfo tx
 type PoolTxInfo struct {
 	Hash   string `json:"hash"`
 	Nonce  int    `json:"accountNonce"`
@@ -72,6 +81,7 @@ type PoolTxInfo struct {
 	//GasLimit int    `json:"gasLimit"`
 }
 
+// SendTxInfo send tx
 type SendTxInfo struct {
 	nonce   int
 	hash    string
@@ -116,17 +126,29 @@ func getBalance(t *testing.T, command, account, serverAddr string) (int64, error
 func getNonce(t *testing.T, command, account, serverAddr string) (int, error) {
 	cmd := exec.Command(command, "getnonce", "--account", account, "--address", serverAddr)
 	//var curNonce int
-	if output, err := cmd.CombinedOutput(); err != nil {
+	output, err := cmd.CombinedOutput()
+	if err != nil {
 		return 0, err
-	} else {
-		output = bytes.Trim(output, "\n")
-		fmt.Println(string(output))
-		return strconv.Atoi(string(output))
 	}
+
+	output = bytes.Trim(output, "\n")
+	fmt.Println(string(output))
+	return strconv.Atoi(string(output))
 }
 
-func sentTX(t *testing.T, command string, ammount, nonce int, account1_keystore, account2, serverAddr string) (txHash, debtHash string, err error) {
-	cmd := exec.Command(command, "sendtx", "--amount", strconv.Itoa(ammount), "--price", "1", "--from", account1_keystore, "--to", account2, "--nonce", strconv.Itoa(nonce))
+// SendTx send a tx
+func SendTx(t *testing.T, command string, amount, nonce, gaslimit int, keystore, to, payload, serverAddr string) (txHash, debtHash string, err error) {
+	if gaslimit <= 0 {
+		gaslimit = 3000000
+	}
+
+	var cmd *exec.Cmd
+	if payload == "" || payload == "0x" {
+		cmd = exec.Command(command, "sendtx", "--amount", strconv.Itoa(amount), "--price", "1", "--gas", strconv.Itoa(gaslimit), "--from", keystore, "--to", to, "--nonce", strconv.Itoa(nonce))
+	} else {
+		cmd = exec.Command(command, "sendtx", "--amount", strconv.Itoa(amount), "--price", "1", "--gas", strconv.Itoa(gaslimit), "--from", keystore, "--to", to, "--nonce", strconv.Itoa(nonce), "--payload", payload)
+	}
+
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -211,7 +233,8 @@ func getPoolCountTxs(t *testing.T, command, serverAddr string) (int64, error) {
 	return int64(tmp), nil
 }
 
-func getReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo, error) {
+// GetReceipt get the receipt
+func GetReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo, error) {
 	cmd := exec.Command(command, "getreceipt", "--hash", txHash, "--address", serverAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
