@@ -541,3 +541,111 @@ func Test_HTLC_Withdraw_Available_Gas(t *testing.T) {
 		t.Fatal("Test_HTLC_Withdraw_Available_Gas htlc locked time is not equal to what has been set")
 	}
 }
+
+func Test_HTLC_Withdraw_Forged_Receiver(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	stdin.Close()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var createInfo HTLCCreateInfo
+
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver unmarshal created htlc tx err: %s", err)
+	}
+
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_3, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver get balance err: %s", err)
+	}
+
+	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_3, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var withdrawInfo HTLCWithDrawInfo
+
+	if err := json.Unmarshal([]byte(str), &withdrawInfo); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err := GetReceipt(t, CmdClient, withdrawInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver get receipt err: %s", err)
+	}
+
+	fmt.Println("receipt:", receipt)
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver forged receiver withdrawed")
+	}
+
+	currentBalance, err := getBalance(t, CmdClient, AccountShard1_3, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver get balance err: %s", err)
+	}
+
+	if (receipt.TotalFee + currentBalance) != beginBalance {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver balance is not equal")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to withdraw, only receiver is allowed") {
+		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver err message")
+	}
+
+}
