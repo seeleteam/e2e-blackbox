@@ -35,7 +35,7 @@ func Test_HTLC_Create_Low_Gas(t *testing.T) {
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err = cmd.Start(); err != nil {
-		t.Fatalf("Test_HTLC_Create: An error occured: %s", err)
+		t.Fatalf("Test_HTLC_Create_Low_Gas: An error occured: %s", err)
 	}
 
 	io.WriteString(stdin, "123\n")
@@ -186,7 +186,7 @@ func Test_HTLC_Create_Low_Balance(t *testing.T) {
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err = cmd.Start(); err != nil {
-		t.Fatalf("Test_HTLC_Create: An error occured: %s", err)
+		t.Fatalf("Test_HTLC_Create_Low_Balance: An error occured: %s", err)
 	}
 
 	io.WriteString(stdin, "123\n")
@@ -196,5 +196,155 @@ func Test_HTLC_Create_Low_Balance(t *testing.T) {
 
 	if !strings.Contains(errStr, "balance is not enough") {
 		t.Fatalf("Test_HTLC_Create_Low_Balance Err:%s", errStr)
+	}
+}
+
+func Test_HTLC_Create_Invalid_KeyFile(t *testing.T) {
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", "KeyFileShard1_1", "--to", AccountShard1_2, "--amount", "1", "--price", "15",
+		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_KeyFile: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid sender key file") {
+		t.Fatalf("Test_HTLC_Create_Invalid_KeyFile Err:%s", errStr)
+	}
+}
+
+func Test_HTLC_Create_Invalid_To_Without_Prefix_0x(t *testing.T) {
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", "AccountShard1_2", "--amount", "1", "--price", "15",
+		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_Without_Prefix_0x: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "hex string without 0x prefix") {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_Without_Prefix_0x Err:%s", errStr)
+	}
+}
+
+func Test_HTLC_Create_Invalid_To_With_Prefix_0x_Odd(t *testing.T) {
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", "0x123", "--amount", "1", "--price", "15",
+		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_With_Prefix_0x_Odd: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "hex string of odd length") {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_With_Prefix_0x_Odd Err:%s", errStr)
+	}
+}
+
+func Test_HTLC_Create_Invalid_To_With_Prefix_0x_Even(t *testing.T) {
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", "0x1234", "--amount", "1", "--price", "15",
+		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_With_Prefix_0x_Even: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid address length") {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_With_Prefix_0x_Even Err:%s", errStr)
+	}
+}
+
+func Test_HTLC_Create_Invalid_To_With_Prefix_0x_Long_Than_Address(t *testing.T) {
+	locktime := generateTime(5)
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", "0x0a57a2714e193b7ac50475ce625f2dcfb483d74101", "--amount", "1", "--price", "15",
+		"--gas", "200000", "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_With_Prefix_0x_Long_Than_Address: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid address length") {
+		t.Fatalf("Test_HTLC_Create_Invalid_To_With_Prefix_0x_Long_Than_Address Err:%s", errStr)
 	}
 }
