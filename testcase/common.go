@@ -143,7 +143,7 @@ func sentTX(t *testing.T, command string, ammount, nonce int, account1_keystore,
 		return
 	}
 
-	io.WriteString(stdin, "123456\n")
+	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 
 	outStr, errStr := out.String(), outErr.String()
