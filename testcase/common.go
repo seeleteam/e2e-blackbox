@@ -70,6 +70,12 @@ type HTLCWithDrawInfo struct {
 	PreImage string `json:"preimage"`
 }
 
+// HTLCRefundInfo refund info
+type HTLCRefundInfo struct {
+	Tx   TxInfo `json:"Tx"`
+	Hash string `json:"hash"`
+}
+
 // ReceiptInfo receipt
 type ReceiptInfo struct {
 	Failed   bool   `json:"failed"`
