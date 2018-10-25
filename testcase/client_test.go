@@ -24,16 +24,16 @@ func Test_Client_GetInfo(t *testing.T) {
 	res, err := cmd.CombinedOutput()
 
 	if err != nil {
-		t.Fatalf("getinfo error, %s", err)
+		t.Fatalf("Test_Client_GetInfo: GetInfo error, %s", err)
 	}
 
 	var r ResGetInfo
-	r_err := json.Unmarshal(res, &r)
-	if r_err != nil {
-		t.Fatal("decode return result error")
+	err = json.Unmarshal(res, &r)
+	if err != nil {
+		t.Fatalf("Test_Client_GetInfo: decode return result error %s", err)
 	}
 
 	if r.MinerStatus != "Running" {
-		t.Fatal("Node not running!")
+		t.Fatalf("Test_Client_GetInfo: Node not running!")
 	}
 }
