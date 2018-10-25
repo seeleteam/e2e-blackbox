@@ -162,6 +162,86 @@ func Test_HTLC_Create_Available_Gas(t *testing.T) {
 
 }
 
+func Test_HTLC_Create_Invalid_Time(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time get balance err: %s", err)
+	}
+
+	locktime := time.Now().Unix()
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+
+	cmd.Wait()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+
+	var createInfo HTLCCreateInfo
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Create_Invalid_Time get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
+	receipt, err := GetReceipt(t, CmdClient, createInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time get receipt err: %s", err)
+	}
+
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time tx operation fault")
+	}
+
+	currentBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time get balance err: %s", err)
+	}
+
+	if (receipt.TotalFee + currentBalance) != beginBalance {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time balance is not equal")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to lock, time is not in future") {
+		t.Fatalf("Test_HTLC_Create_Invalid_Time Err: %s", receipt.Result)
+	}
+}
+
 func Test_HTLC_Create_Low_Balance(t *testing.T) {
 
 	beginBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
@@ -443,6 +523,20 @@ func Test_HTLC_Withdraw_Available_Gas(t *testing.T) {
 		t.Fatalf("Test_HTLC_Withdraw_Available_Gas get balance err: %s", err)
 	}
 
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Withdraw_Available_Gas get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
 	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_2, "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
 	out.Reset()
@@ -582,6 +676,20 @@ func Test_HTLC_Withdraw_Forged_Receiver(t *testing.T) {
 		t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver get balance err: %s", err)
 	}
 
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Withdraw_Forged_Receiver get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
 	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_3, "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
 	out.Reset()
@@ -689,6 +797,20 @@ func Test_HTLC_Withdraw_Forged_Preimage(t *testing.T) {
 		t.Fatalf("Test_HTLC_Withdraw_Forged_Preimage get balance err: %s", err)
 	}
 
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Withdraw_Forged_Preimage get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
 	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_2, "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", ForgedSecret)
 	out.Reset()
@@ -794,6 +916,20 @@ func Test_HTLC_Withdraw_After_Withdrawed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Test_HTLC_Withdraw_After_Withdrawed get balance err: %s", err)
 	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Withdraw_After_Withdrawed get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
 
 	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_2, "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
@@ -949,10 +1085,105 @@ func Test_HTLC_Withdraw_After_Withdrawed(t *testing.T) {
 	}
 }
 
+func Test_HTLC_Withdraw_After_TimeLock(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	locktime := time.Now().Unix() + 60
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock err: %s", err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	stdin.Close()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var createInfo HTLCCreateInfo
+
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock unmarshal created htlc tx err: %s", err)
+	}
+
+	timer := time.After(60 * time.Second)
+	<-timer
+
+	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_2, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var withdrawInfo HTLCWithDrawInfo
+
+	if err := json.Unmarshal([]byte(str), &withdrawInfo); err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Withdraw_After_TimeLock get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err := GetReceipt(t, CmdClient, withdrawInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock get receipt err: %s", err)
+	}
+
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock tx operation fault")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to withraw, time lock is over") {
+		t.Fatalf("Test_HTLC_Withdraw_After_TimeLock err : %s", receipt.Result)
+	}
+}
+
 func Test_HTLC_Refund(t *testing.T) {
 	amount := int64(1234)
 	maxGas := int64(200000)
-	locktime := time.Now().Unix() + 120
+	locktime := time.Now().Unix() + 60
 	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
 
@@ -1007,7 +1238,7 @@ func Test_HTLC_Refund(t *testing.T) {
 		t.Fatalf("Test_HTLC_Refund get balance err: %s", err)
 	}
 
-	timer := time.After(120 * time.Second)
+	timer := time.After(60 * time.Second)
 	<-timer
 	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_1, "--price", "15",
 		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash)
@@ -1105,5 +1336,678 @@ func Test_HTLC_Refund(t *testing.T) {
 
 	if locktime != htlcRefundResult.TimeLock {
 		t.Fatal("Test_HTLC_Refund htlc locked time is not equal to what has been set")
+	}
+}
+
+func Test_HTLC_Refund_After_Refund(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	locktime := time.Now().Unix() + 60
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund err: %s", err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	stdin.Close()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Refund cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var createInfo HTLCCreateInfo
+
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Refund get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
+	receipt, err := GetReceipt(t, CmdClient, createInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get receipt err: %s", err)
+	}
+
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get balance err: %s", err)
+	}
+
+	timer := time.After(60 * time.Second)
+	<-timer
+	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_1, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Refund cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var refundInfo HTLCRefundInfo
+
+	if err := json.Unmarshal([]byte(str), &refundInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund unmarshal refund htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Refund get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err = GetReceipt(t, CmdClient, refundInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get receipt err: %s", err)
+	}
+
+	if receipt.Failed {
+		t.Fatalf("Test_HTLC_Refund_After_Refund tx operation fault")
+	}
+
+	currentBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get balance err: %s", err)
+	}
+
+	if (receipt.TotalFee + currentBalance - amount) != beginBalance {
+		t.Fatalf("Test_HTLC_Refund_After_Refund balance is not equal")
+	}
+
+	htlcRefundResult, err := htlcDecode(t, CmdClient, receipt.Result)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund htlc decode err: %s", err)
+	}
+
+	if htlcRefundResult.Withdrawed {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc withdrawed")
+	}
+
+	if !htlcRefundResult.Refunded {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc refunded")
+	}
+
+	if htlcRefundResult.Preimage != "" {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc preimage is not equal")
+	}
+
+	if amount != htlcRefundResult.Tx.TxData.Amount {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc amount is not equal to what has been set")
+	}
+
+	if AccountShard1_1 != htlcRefundResult.Tx.TxData.From {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc sender is not equal to what has been set")
+	}
+
+	if AccountShard1_2 != htlcRefundResult.To {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc receiver is not equal to what has been set")
+	}
+
+	if Secretehash != htlcRefundResult.HashLock {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc secrete hash is not equal to what has been set")
+	}
+
+	if locktime != htlcRefundResult.TimeLock {
+		t.Fatal("Test_HTLC_Refund_After_Refund htlc locked time is not equal to what has been set")
+	}
+
+	beginBalance, err = getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get balance err: %s", err)
+	}
+
+	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_1, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Refund cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+
+	if err := json.Unmarshal([]byte(str), &refundInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund unmarshal refund htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Refund get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err = GetReceipt(t, CmdClient, refundInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get receipt err: %s", err)
+	}
+
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Refund_After_Refund tx operation fault")
+	}
+
+	currentBalance, err = getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Refund get balance err: %s", err)
+	}
+
+	if (receipt.TotalFee + currentBalance) != beginBalance {
+		t.Fatalf("Test_HTLC_Refund_After_Refund balance is not equal")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to refund, owner have refunded") {
+		t.Fatalf("Test_HTLC_Refund_After_Refund Err: %s", receipt.Result)
+	}
+}
+
+func Test_HTLC_Refund_After_Withdrawed(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	locktime := time.Now().Unix() + 60
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed err: %s", err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	stdin.Close()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var createInfo HTLCCreateInfo
+
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Withdrawed get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
+	cmd = exec.Command(CmdClient, "htlc", "withdraw", "--from", KeyFileShard1_2, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash, "--preimage", Secret)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var withdrawInfo HTLCWithDrawInfo
+
+	if err := json.Unmarshal([]byte(str), &withdrawInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Withdrawed get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err := GetReceipt(t, CmdClient, withdrawInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed get receipt err: %s", err)
+	}
+
+	if receipt.Failed {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed tx operation fault")
+	}
+
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed get balance err: %s", err)
+	}
+
+	timer := time.After(60 * time.Second)
+	<-timer
+	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_1, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var refundInfo HTLCRefundInfo
+
+	if err := json.Unmarshal([]byte(str), &refundInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed unmarshal refund htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Withdrawed get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
+	beginBalance, err = getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed get balance err: %s", err)
+	}
+
+	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_1, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+
+	if err := json.Unmarshal([]byte(str), &refundInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed unmarshal refund htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_After_Withdrawed get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err = GetReceipt(t, CmdClient, refundInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed get receipt err: %s", err)
+	}
+
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed tx operation fault")
+	}
+
+	currentBalance, err := getBalance(t, CmdClient, AccountShard1_1, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed get balance err: %s", err)
+	}
+
+	if (receipt.TotalFee + currentBalance) != beginBalance {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed balance is not equal")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to refund, receiver have withdrawed") {
+		t.Fatalf("Test_HTLC_Refund_After_Withdrawed Err: %s", receipt.Result)
+	}
+}
+
+func Test_HTLC_Refund_Forged_Sender(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	locktime := time.Now().Unix() + 60
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender err: %s", err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	stdin.Close()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var createInfo HTLCCreateInfo
+
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_Forged_Sender get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
+	receipt, err := GetReceipt(t, CmdClient, createInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender get receipt err: %s", err)
+	}
+
+	timer := time.After(60 * time.Second)
+	<-timer
+	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_3, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", createInfo.Tx.Hash)
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var refundInfo HTLCRefundInfo
+
+	if err := json.Unmarshal([]byte(str), &refundInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender unmarshal refund htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_Forged_Sender get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err = GetReceipt(t, CmdClient, refundInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender get receipt err: %s", err)
+	}
+
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender tx operation fault")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to refund, only owner is allowed") {
+		t.Fatalf("Test_HTLC_Refund_Forged_Sender Err: %s", receipt.Result)
+	}
+}
+
+func Test_HTLC_Refund_Forged_Hash(t *testing.T) {
+	amount := int64(1234)
+	maxGas := int64(200000)
+	locktime := time.Now().Unix() + 60
+	cmd := exec.Command(CmdClient, "htlc", "create", "--from", KeyFileShard1_1, "--to", AccountShard1_2, "--amount", strconv.FormatInt(amount, 10), "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", Secretehash, "--time", strconv.FormatInt(locktime, 10))
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash err: %s", err)
+	}
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	stdin.Close()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash cmd err: %s", errStr)
+	}
+
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var createInfo HTLCCreateInfo
+
+	if err := json.Unmarshal([]byte(str), &createInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash unmarshal created htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_Forged_Hash get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+
+	receipt, err := GetReceipt(t, CmdClient, createInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash get receipt err: %s", err)
+	}
+
+	timer := time.After(60 * time.Second)
+	<-timer
+	cmd = exec.Command(CmdClient, "htlc", "refund", "--from", KeyFileShard1_1, "--price", "15",
+		"--gas", strconv.FormatInt(maxGas, 10), "--hash", "0x1234567890")
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	stdin, err = cmd.StdinPipe()
+
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash err: %s", err)
+	}
+
+	defer stdin.Close()
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	output, errStr = out.String(), outErr.String()
+	if errStr != "" {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash cmd err: %s", errStr)
+	}
+
+	str = output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var refundInfo HTLCRefundInfo
+
+	if err := json.Unmarshal([]byte(str), &refundInfo); err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash unmarshal refund htlc tx err: %s", err)
+	}
+
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_HTLC_Refund_Forged_Hash get pool count err: %s", err)
+		}
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(10)
+	receipt, err = GetReceipt(t, CmdClient, refundInfo.Tx.Hash, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash get receipt err: %s", err)
+	}
+
+	if !receipt.Failed {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash tx operation fault")
+	}
+
+	if !strings.Contains(receipt.Result, "Failed to get data with key") {
+		t.Fatalf("Test_HTLC_Refund_Forged_Hash Err: %s", receipt.Result)
 	}
 }
