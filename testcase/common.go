@@ -65,6 +65,7 @@ type HTLCCreateInfo struct {
 
 // ReceiptInfo receipt
 type ReceiptInfo struct {
+	Contract string `json:"contract"`
 	Failed   bool   `json:"failed"`
 	TotalFee int64  `json:"totalFee"`
 	UsedGas  int64  `json:"usedGas"`
