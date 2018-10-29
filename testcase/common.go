@@ -63,6 +63,19 @@ type HTLCCreateInfo struct {
 	TimeLock int64  `json:"TimeLock"`
 }
 
+// HTLCWithDrawInfo HTLC withdraw info
+type HTLCWithDrawInfo struct {
+	Tx       TxInfo `json:"Tx"`
+	Hash     string `json:"hash"`
+	PreImage string `json:"preimage"`
+}
+
+// HTLCRefundInfo refund info
+type HTLCRefundInfo struct {
+	Tx   TxInfo `json:"Tx"`
+	Hash string `json:"hash"`
+}
+
 // ReceiptInfo receipt
 type ReceiptInfo struct {
 	Contract string `json:"contract"`
@@ -176,7 +189,7 @@ func SendTx(t *testing.T, command string, amount, nonce, gaslimit int, keystore,
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	fmt.Println("sendtx out:[", outStr, "]")
+	// fmt.Println("sendtx out:[", outStr, "]")
 	var txInfo TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
@@ -234,7 +247,6 @@ func getPoolCountTxs(t *testing.T, command, serverAddr string) (int64, error) {
 	return int64(tmp), nil
 }
 
-// GetReceipt get the receipt
 func GetReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo, error) {
 	cmd := exec.Command(command, "getreceipt", "--hash", txHash, "--address", serverAddr)
 	var out bytes.Buffer

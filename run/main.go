@@ -28,7 +28,7 @@ const (
 	CoverFileName = "seele_coverage_detail"
 	CoverPackage  = "common\t,core\t,trie\t,p2p\t,seele\t"
 
-	Subject    = "Daily CMD Commands Test Report"
+	Subject    = "Daily Blackbox E2E Test Report"
 	Sender     = "send@email.com"
 	Password   = "password"
 	SenderName = "reporter"
@@ -97,8 +97,7 @@ func do(today string) {
 
 func Run() (all string, specified map[string]string) {
 	specified = make(map[string]string)
-	// go test github.com/seeleteam/go-seele/... -coverprofile=seele_cover
-	coverbyte, err := exec.Command("go", "test", "./...", "-v", "-coverprofile="+CoverFileName).CombinedOutput()
+	coverbyte, err := exec.Command("go", "test", "./...", "-v", " -timeout 600s", " -coverprofile="+CoverFileName).CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("cover FAIL: %s %s", err, string(coverbyte)), nil
 	}
@@ -119,7 +118,6 @@ func Run() (all string, specified map[string]string) {
 
 		all += out + "\n"
 	}
-
 	// go tool cover -html=covprofile -o coverage.html
 	if err := exec.Command("go", "tool", "cover", "-html="+CoverFileName, "-o", CoverFileName+".html").Run(); err != nil {
 		return fmt.Sprintf("tool cover FAIL: %s", err), nil
