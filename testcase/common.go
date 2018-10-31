@@ -78,11 +78,12 @@ type HTLCRefundInfo struct {
 
 // ReceiptInfo receipt
 type ReceiptInfo struct {
-	Contract string `json:"contract"`
-	Failed   bool   `json:"failed"`
-	TotalFee int64  `json:"totalFee"`
-	UsedGas  int64  `json:"usedGas"`
-	Result   string `json:"result"`
+	Contract string        `json:"contract"`
+	Failed   bool          `json:"failed"`
+	TotalFee int64         `json:"totalFee"`
+	UsedGas  int64         `json:"usedGas"`
+	Result   string        `json:"result"`
+	Logs     []interface{} `json:"logs"`
 }
 
 // PoolTxInfo tx
@@ -146,7 +147,7 @@ func getNonce(t *testing.T, command, account, serverAddr string) (int, error) {
 	}
 
 	output = bytes.Trim(output, "\n")
-	fmt.Println(string(output))
+	// fmt.Println(string(output))
 	return strconv.Atoi(string(output))
 }
 
@@ -249,20 +250,10 @@ func getPoolCountTxs(t *testing.T, command, serverAddr string) (int64, error) {
 
 func GetReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo, error) {
 	cmd := exec.Command(command, "getreceipt", "--hash", txHash, "--address", serverAddr)
-	var out bytes.Buffer
-	var outErr bytes.Buffer
-	cmd.Stdout, cmd.Stderr = &out, &outErr
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
 
-	if err := cmd.Wait(); err != nil {
-		return nil, err
-	}
-
-	output, errStr := out.String(), outErr.String()
-	if "" != errStr {
-		return nil, errors.New("Failed to get receipt")
+	output, errStr := cmd.CombinedOutput()
+	if errStr != nil {
+		return nil, errors.New(string(output))
 	}
 
 	var info ReceiptInfo
