@@ -7,7 +7,6 @@ package testcase
 
 import (
 	"encoding/json"
-	"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -60,7 +59,7 @@ func Test_Client_Key(t *testing.T) {
 	re = regexp.MustCompile("private(.+)")
 	keyField = strings.Split(re.FindString(string(res)), " ")
 
-	if len(keyField[1]) == 0 {
+	if len(keyField[2]) == 0 {
 		t.Fatal("Test_Client_Key: private key not found!")
 	}
 }
