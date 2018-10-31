@@ -49,8 +49,6 @@ func Test_Client_Key(t *testing.T) {
 		t.Fatalf("Test_Client_Key: Key error, %s", err)
 	}
 
-	fmt.Println(string(res))
-
 	re, err := regexp.Compile("public(.+)")
 
 	keyField := strings.Split(re.FindString(string(res)), "  ")
