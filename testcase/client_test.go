@@ -82,31 +82,38 @@ func Test_Client_DumpHeap(t *testing.T) {
 }
 
 // --------------------test savekey start-------------------
-func Test_Client_SaveKey_Invalid_To_Privatekey_Without_Prefix_0x(t *testing.T) {
+func Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "123")
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_To_Privatekey_Without_Prefix_0x,savekey  should return error with privatekey without prefix 0x")
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x,savekey  should return error with privatekey without prefix 0x")
 	}
 }
 
-func Test_Client_SaveKey_Invalid_To_Privatekey_With_Prefix_Odd(t *testing.T) {
+func Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x123")
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_To_Privatekey_With_Prefix_Odd,savekey should return error with privatekey is odd length")
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd,savekey should return error with privatekey is odd length")
 	}
 }
 
-func Test_Client_SaveKey_Invalid_To_Privatekey_Syntax_Characeter(t *testing.T) {
+func Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x1234-")
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_To_Privatekey_Syntax_Characeter,savekey should return error with privatekey has syntax character")
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter,savekey should return error with privatekey has syntax character")
 	}
 }
 
-func Test_Client_SaveKey_Invalid_To_FileNameValue_Empty(t *testing.T) {
+func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", AccountPrivateKey2, "--file", "")
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_To_FileNameValue_Empty,savekey should return error with empty filename")
+		t.Fatalf("Test_Client_SaveKey_Invalid_FileNameValue_Empty,savekey should return error with empty filename")
+	}
+}
+
+func Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x")
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length,savekey  should return error with privatekey of invalid length(less than 256 bits)")
 	}
 }
 
