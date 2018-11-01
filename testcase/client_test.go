@@ -7,6 +7,7 @@ package testcase
 
 import (
 	"encoding/json"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -61,5 +62,18 @@ func Test_Client_Key(t *testing.T) {
 
 	if len(keyField[2]) == 0 {
 		t.Fatal("Test_Client_Key: private key not found!")
+	}
+}
+
+func Test_Client_DumpHeap(t *testing.T) {
+	cmd := exec.Command(CmdClient, "dumpheap")
+	res, err := cmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("Test_Client_DumpHeap: dumpheap error, %s", err)
+	}
+
+	if _, err = os.Stat(strings.TrimSpace(string(res))); os.IsNotExist(err) {
+		t.Fatalf("Test_Client_DumpHeap: file %s not found!", string(res))
 	}
 }
