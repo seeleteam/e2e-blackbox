@@ -77,3 +77,5 @@ func Test_Client_DumpHeap(t *testing.T) {
 		t.Fatalf("Test_Client_DumpHeap: file %s not found!", string(res))
 	}
 }
+
+//start getblock
