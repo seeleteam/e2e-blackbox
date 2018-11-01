@@ -78,4 +78,75 @@ func Test_Client_DumpHeap(t *testing.T) {
 	}
 }
 
-//start getblock dd
+func Test_Client_GetBlock_ByNormalHeight(t *testing.T) {
+	// Normal height
+	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblock: Node not running!")
+	}
+}
+
+func Test_Client_GetBlock_ByInvalidHeight(t *testing.T) {
+	// invalid height
+	cmd := exec.Command(CmdClient, "getblock", "--height", "10000000000", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblock: error parameter success?")
+	}
+}
+
+func Test_Client_GetBlock_InvalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblock", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblock error, %s", err)
+	}
+}
+
+func Test_Client_GetBlock_ByNormalHash(t *testing.T) {
+	// invalid height
+	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHash, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblock error, %s", err)
+	}
+}
+
+func Test_Client_GetBlock_ByInvalidHash(t *testing.T) {
+	// invalid height
+	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHashErr, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("getblock error parameter success?")
+	}
+}
+
+// getblock fulltx support.
+func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--fulltx", "--address", ServerAddr)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblock error, %s", err)
+	} else {
+		var blockInfo BlockInfo
+		if err = json.Unmarshal(output, &blockInfo); err != nil {
+			t.Fatalf("Test_Client_GetBlock_ByHeightFulltx: %s", err)
+		}
+
+		if len(blockInfo.Transactions) <= 0 {
+			t.Fatalf("Test_Client_GetBlock_ByHeightFulltx, block should contain one transaction at lease")
+		}
+	}
+}
+
+// getblock fulltx support.
+func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHash, "--fulltx", "--address", ServerAddr)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getblock error, %s", err)
+	} else {
+		var blockInfo BlockInfo
+		if err = json.Unmarshal(output, &blockInfo); err != nil {
+			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: %s", err)
+		}
+
+		if len(blockInfo.Transactions) <= 0 {
+			t.Fatalf("Test_Client_GetBlock_ByHashFulltx, hash should contain one transaction at lease")
+		}
+	}
+}
