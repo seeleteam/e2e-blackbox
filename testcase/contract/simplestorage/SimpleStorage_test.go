@@ -11,7 +11,7 @@ import (
 
 var (
 	// testcase\contract\simplestorage\simplestorage.sol
-	abiFile = "./simplestorage.abi"
+	abiFile = "./SimpleStorage.abi"
 	binFile = "./SimpleStorage.bin"
 )
 
