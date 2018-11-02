@@ -17,8 +17,8 @@ const (
 	CmdClient = "../../../bin/client"
 	CmdLight  = "../../../bin/light"
 
-	KeyFileShard1 = "../../../config/keyfile/shard1-0x0a57a2714e193b7ac50475ce625f2dcfb483d741"
-	KeyFileShard2 = "../../../config/keyfile/shard2-0x2a23825407740fa7163069257c57452c4d4fc3d1"
+	KeyFileShard11 = "../../../config/keyfile/shard1-0x4fb7c8b0287378f0cf8b5a9262bf3ef7e101f8d1"
+	KeyFileShard12 = "../../../config/keyfile/shard1-0xec759db47a65f6537d630517f6cd3ca39c6f93d1"
 )
 
 // HandleTx handle tx and return the receipt
