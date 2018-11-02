@@ -89,7 +89,7 @@ func Test_Client_DumpHeap(t *testing.T) {
 func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
-		t.Fatalf("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
+		t.Fatal("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
 	}
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "heap.dump\n")
@@ -97,7 +97,7 @@ func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	cmd := exec.Command(CmdClient, "dumpheap", "--address", ServerAddr)
 	file, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatal("Test_Client_Dumpheap_Default_Filename: An error occured: %s", err.Error())
+		t.Fatalf("Test_Client_Dumpheap_Default_Filename: An error occured: %s", err.Error())
 	}
 
 	if defaultFilePath != string(file) {
