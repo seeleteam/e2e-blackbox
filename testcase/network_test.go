@@ -68,7 +68,7 @@ func Test_Client_P2P_PeersInfo(t *testing.T) {
 	} else {
 		var peersInfo []PeerInfo
 		if err = json.Unmarshal(output, &peersInfo); err != nil {
-			t.Fatalf("%s", err)
+			t.Fatalf("Test_Client_P2P_PeersInfo ummarshal failed %s", err)
 		}
 	}
 }
@@ -99,7 +99,7 @@ func Test_Light_P2P_Peers(t *testing.T) {
 		t.Fatalf("parse string to int64 failed %s", err.Error())
 	}
 	if n < 0 {
-		t.Fatalf("Test_Client_P2P_Peers returns invalid peer number")
+		t.Fatalf("Test_Light_P2P_Peers returns invalid peer number")
 	}
 }
 
@@ -117,7 +117,7 @@ func Test_Light_P2P_PeersInfo(t *testing.T) {
 	} else {
 		var peersInfo []PeerInfo
 		if err = json.Unmarshal(output, &peersInfo); err != nil {
-			t.Fatalf("%s", err)
+			t.Fatalf("Test_Client_P2P_PeersInfo ummarshal failed %s", err)
 		}
 	}
 }
