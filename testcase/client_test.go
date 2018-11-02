@@ -112,7 +112,7 @@ func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
 
 func Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x")
-	if _, err := cmd.CombinedOutput(); err != nil {
+	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length,savekey  should return error with privatekey of invalid length(less than 256 bits)")
 	}
 }
