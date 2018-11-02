@@ -432,3 +432,27 @@ func Test_Light_GetNonce_AccountFromOtherShard(t *testing.T) {
 		t.Fatalf("getnonce returns successfully for other shard account")
 	}
 }
+
+func Test_Light_Payload_ValidParameter(t *testing.T) {
+	cmd := exec.Command(CmdLight, "payload", "--abi", "./contract/simplestorage/SimpleStorage.abi", "--method", "set",
+		"--args", "10")
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Light_Payload_ValidParameter returns false with valid parameter")
+	}
+}
+
+func Test_Light_Payload_InvalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdLight, "payload", "./contract/simplestorage/SimpleStorage.abi", "--method", "set",
+		"--args", "10")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Light_Payload_InvalidParameter returns ok with invalid parameter")
+	}
+}
+
+func Test_Light_Payload_Method_InvalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdLight, "payload", "--abi", "./contract/simplestorage/SimpleStorage.abi", "--method", "get",
+		"--args", "10")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Light_Payload_Method_InvalidParameter returns ok with method invalid parameter")
+	}
+}
