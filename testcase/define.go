@@ -25,8 +25,10 @@ var (
 	InvalidAccountType = "0xff0fb1e59e92e94fac74febec98cfd58b956fa6f" // account type == 15, invalid
 	AccountShard2      = [...]string{"0xc910e52e3a314c93fdf545b88d264f39becb8d41", "0xff0fb1e59e92e94fac74febec98cfd58b956fa61"}
 
-	BlockHash    = "0x000000c80d93ee588e022dfa396357c6f1f77b4f8576d8188dcbb821ed742900"
-	BlockHashErr = "0x88aad2ac0921f7784d0d3f6d7865e48ec0e454dbd7dc60e4ecf6eaa08c548410"
+	BlockHash                = "0x000000c80d93ee588e022dfa396357c6f1f77b4f8576d8188dcbb821ed742900"
+	BlockHashErr             = "0x88aad2ac0921f7784d0d3f6d7865e48ec0e454dbd7dc60e4ecf6eaa08c548410"
+	ClientInvalidAccountType = "0xff0fb1e59e92e94fac74febec98cfd58b956fa6r"
+	ErrAccountPrivateKey     = "9b9245066c57a5cd376a378b9edc69ea545a195771d5f55859180f1a2ff61240"
 )
 
 // const
