@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 )
 
 type ResGetInfo struct {
@@ -79,24 +78,29 @@ func Test_Client_DumpHeap(t *testing.T) {
 	}
 }
 
-func Test_Client_GetBlock_ByNormalHeight(t *testing.T) {
+func Test_Client_GetBlock_ByHeight_NodeStop(t *testing.T) {
 	// Normal height
-ErrContinue:
+	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStop: Node not running!")
+	}
+}
+
+func Test_Client_GetBlock_ByHeight_NodeStart(t *testing.T) {
+	// Normal height
 	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
 	if res, err := cmd.CombinedOutput(); err != nil {
-		t.Logf("Test_Client_GetBlock_ByNormalHeight: Node not running!")
-		time.Sleep(5 * time.Second)
-		goto ErrContinue
+		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: Node not running!")
 	} else {
 		var blockInfo BlockInfo
 		if err = json.Unmarshal(res, &blockInfo); err != nil {
-			t.Fatalf("Test_Client_GetBlock_ByNormalHeight: %s", err)
+			t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: %s", err)
 		}
 
 		headerMp := blockInfo.Header.(map[string]interface{})
 		height := uint64(headerMp["Height"].(float64))
 		if height != 1 {
-			t.Fatalf("Test_Client_GetBlock_ByNormalHeight: Expect the return value is not correct!")
+			t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: Expect the return value is not correct!")
 		}
 
 	}
