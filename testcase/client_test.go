@@ -8,6 +8,8 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
+  "fmt"
+  "io"
 	"math/big"
 	"os"
 	"os/exec"
@@ -487,3 +489,68 @@ func Test_Client_Miner_SetThreads_Default(t *testing.T) {
 		t.Fatalf("Test_Client_Miner_SetThreads_Default did not set default cpu nunber as threads number")
 	}
 }
+
+// --------------------test savekey start-------------------
+func Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "123")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x,savekey  should return error with privatekey without prefix 0x")
+	}
+}
+
+func Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x123")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd,savekey should return error with privatekey is odd length")
+	}
+}
+
+func Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x1234-")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter,savekey should return error with privatekey has syntax character")
+	}
+}
+
+func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", AccountPrivateKey2, "--file", "")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_FileNameValue_Empty,savekey should return error with empty filename")
+	}
+}
+
+func Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x")
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length,savekey  should return error with privatekey of invalid length(less than 256 bits)")
+	}
+}
+
+func Test_Client_SaveKey(t *testing.T) {
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", AccountPrivateKey2, "--file", ".test_keystore")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SaveKey: An error occured: %s", err)
+	}
+	// need input twice
+	io.WriteString(stdin, "12345\n")
+	io.WriteString(stdin, "12345\n")
+	cmd.Wait()
+
+	outStr, errStr := out.String(), outErr.String()
+	fmt.Println(outStr, errStr)
+	if len(string(errStr)) > 0 {
+		t.Fatalf("Test_Client_SaveKey savekey error. %s %s", errStr, cmd.Args)
+	}
+}
+
+// --------------------test savekey end-------------------
