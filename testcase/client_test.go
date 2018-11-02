@@ -491,37 +491,93 @@ func Test_Client_Miner_SetThreads_Default(t *testing.T) {
 // --------------------test savekey start-------------------
 func Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "123")
-	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x,savekey  should return error with privatekey without prefix 0x")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x: An error occured: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "Input string not a valid ecdsa string") {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x,savekey  should return error with privatekey without prefix 0x: %s", errStr)
 	}
 }
 
 func Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x123")
-	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd,savekey should return error with privatekey is odd length")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd: An error occured: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "encoding/hex: odd length hex string") {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd,savekey should return error with privatekey is odd length: %s", errStr)
 	}
 }
 
 func Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x1234-")
-	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter,savekey should return error with privatekey has syntax character")
+	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x12345-")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter: An error occured: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "encoding/hex: invalid byte") {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter,savekey should return error with privatekey has syntax character: %s", errStr)
 	}
 }
 
 func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", AccountPrivateKey2, "--file", "")
-	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_FileNameValue_Empty,savekey should return error with empty filename")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_FileNameValue_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid key file path") {
+		t.Fatalf("Test_Client_SaveKey_Invalid_FileNameValue_Empty,savekey should return error with empty filename: %s", errStr)
 	}
 }
 
 func Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length(t *testing.T) {
 	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x")
-	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length,savekey  should return error with privatekey of invalid length(less than 256 bits)")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length: %s", err)
 	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid length, need 256 bits") {
+		t.Fatalf("Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length,savekey  should return error with privatekey of invalid length(less than 256 bits): %s", errStr)
+	}
+
 }
 
 func Test_Client_SaveKey(t *testing.T) {
