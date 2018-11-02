@@ -89,7 +89,7 @@ func Test_Client_DumpHeap(t *testing.T) {
 func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
-		t.Fatal("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
+		t.Fatalf("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
 	}
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "heap.dump\n")
@@ -567,7 +567,7 @@ func Test_Client_GetBlock_ByHeight_NodeStart(t *testing.T) {
 	// Normal height
 	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
 	if res, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: Node not running!")
+		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart:Node to run returns error: %s", err)
 	} else {
 		var blockInfo BlockInfo
 		if err = json.Unmarshal(res, &blockInfo); err != nil {
