@@ -97,7 +97,7 @@ func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	cmd := exec.Command(CmdClient, "dumpheap", "--address", ServerAddr)
 	file, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("Test_Client_Dumpheap_Default_Filename: An error occured: %s", err.Error())
+		t.Fatal("Test_Client_Dumpheap_Default_Filename: An error occured: %s", err.Error())
 	}
 
 	if defaultFilePath != string(file) {
