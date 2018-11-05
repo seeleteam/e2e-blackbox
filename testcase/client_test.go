@@ -690,8 +690,7 @@ func Test_Client_GetBlock_ByHeight_NodeStart(t *testing.T) {
 			t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: %s", err)
 		}
 
-		headerMp := blockInfo.Header.(map[string]interface{})
-		height := uint64(headerMp["Height"].(float64))
+		height := blockInfo.Header.Height
 		if height != 1 {
 			t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: Expect the return value is not correct!")
 		}
@@ -741,8 +740,7 @@ func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
 			t.Fatalf("Test_Client_GetBlock_ByHeightFulltx: %s", err)
 		}
 
-		headerMp := blockInfo.Header.(map[string]interface{})
-		height := uint64(headerMp["Height"].(float64))
+		height := blockInfo.Header.Height
 		if height != 1 {
 			t.Fatalf("Test_Client_GetBlock_ByHeightFulltx: Expect the return value is not correct!")
 		}
