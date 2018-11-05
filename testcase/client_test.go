@@ -10,14 +10,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/big"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"regexp"
-	"runtime"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -148,6 +145,7 @@ func Test_Client_Payload_Method_InvalidParameter(t *testing.T) {
 	}
 }
 
+/*
 func Test_Client_Miner_Status(t *testing.T) {
 	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
 	status, err := cmd.CombinedOutput()
@@ -488,7 +486,7 @@ func Test_Client_Miner_SetThreads_Default(t *testing.T) {
 	if int(n) != cpuNum {
 		t.Fatal("Test_Client_Miner_SetThreads_Default did not set default cpu nunber as threads number")
 	}
-}
+}*/
 
 // --------------------test savekey start-------------------
 func Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x(t *testing.T) {
