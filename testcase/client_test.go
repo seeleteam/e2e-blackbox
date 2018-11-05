@@ -8,8 +8,8 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
-  "fmt"
-  "io"
+	"fmt"
+	"io"
 	"math/big"
 	"os"
 	"os/exec"
@@ -89,7 +89,7 @@ func Test_Client_DumpHeap(t *testing.T) {
 func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
-		t.Fatal("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
+		t.Fatalf("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
 	}
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "heap.dump\n")
@@ -108,7 +108,7 @@ func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 func Test_Client_Dumpheap_Specified_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
-		t.Fatal("Test_Client_Dumpheap_Specified_Filename: Get user path failed %s", err.Error())
+		t.Fatalf("Test_Client_Dumpheap_Specified_Filename: Get user path failed %s", err.Error())
 	}
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "test.dump\n")
@@ -136,7 +136,7 @@ func Test_Client_Payload_InvalidParameter(t *testing.T) {
 	cmd := exec.Command(CmdClient, "payload", "./contract/simplestorage/SimpleStorage.abi", "--method", "set",
 		"--args", "10")
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Payload_InvalidParameter returns ok with invalid parameter")
+		t.Fatal("Test_Client_Payload_InvalidParameter returns ok with invalid parameter")
 	}
 }
 
@@ -144,7 +144,7 @@ func Test_Client_Payload_Method_InvalidParameter(t *testing.T) {
 	cmd := exec.Command(CmdClient, "payload", "--abi", "./contract/simplestorage/SimpleStorage.abi", "--method", "get",
 		"--args", "10")
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Payload_Method_InvalidParameter returns ok with method invalid parameter")
+		t.Fatal("Test_Client_Payload_Method_InvalidParameter returns ok with method invalid parameter")
 	}
 }
 
@@ -165,7 +165,7 @@ func Test_Client_Miner_Status(t *testing.T) {
 			t.Fatalf("Test_Client_Miner_Status: An error occured: %s", err.Error())
 		}
 		if string(status) != "Stopped\n" {
-			t.Fatalf("Test_Client_Miner_Status returns error status")
+			t.Fatal("Test_Client_Miner_Status returns error status")
 		}
 	} else if string(status) == "Stopped\n" {
 		cmd := exec.Command(CmdClient, "miner", "start", "--address", ServerAddr)
@@ -178,7 +178,7 @@ func Test_Client_Miner_Status(t *testing.T) {
 			t.Fatalf("Test_Client_Miner_Status: An error occured: %s", err.Error())
 		}
 		if string(status) != "Running\n" {
-			t.Fatalf("Test_Client_Miner_Status returns error status")
+			t.Fatal("Test_Client_Miner_Status returns error status")
 		}
 	} else {
 		t.Fatalf("Test_Client_Miner_Status return error status %s", string(status))
@@ -199,7 +199,7 @@ func Test_Client_Miner_Start_Multiply(t *testing.T) {
 	}
 	cmd = exec.Command(CmdClient, "miner", "start", "--threads", "3", "--address", ServerAddr)
 	if _, err = cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Start_Multiply returns ok")
+		t.Fatal("Test_Client_Miner_Start_Multiply returns ok")
 	}
 }
 
@@ -217,7 +217,7 @@ func Test_Client_Miner_Start_Invalid_Threads(t *testing.T) {
 	}
 	cmd = exec.Command(CmdClient, "miner", "start", "--threads", "-1", "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Start_Invalid_Threads returns ok")
+		t.Fatal("Test_Client_Miner_Start_Invalid_Threads returns ok")
 	}
 }
 
@@ -235,7 +235,7 @@ func Test_Client_Miner_Start_Valid_Threads(t *testing.T) {
 	}
 	cmd = exec.Command(CmdClient, "miner", "start", "--threads", "2", "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("Test_Client_Miner_Start_Valid_Threads returns ok")
+		t.Fatal("Test_Client_Miner_Start_Valid_Threads returns ok")
 	}
 	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
 	n, err := cmd.CombinedOutput()
@@ -243,7 +243,7 @@ func Test_Client_Miner_Start_Valid_Threads(t *testing.T) {
 		t.Fatalf("Test_Client_Miner_Start_Valid_Threads: An error occured: %s", err.Error())
 	}
 	if string(n) != "2\n" {
-		t.Fatalf("Test_Client_Miner_Start_Valid_Threads did not set the threads number")
+		t.Fatal("Test_Client_Miner_Start_Valid_Threads did not set the threads number")
 	}
 }
 
@@ -275,7 +275,7 @@ func Test_Client_Miner_Start_Default_Threads(t *testing.T) {
 	}
 	cpuNum := runtime.NumCPU()
 	if int(n) != cpuNum {
-		t.Fatalf("Test_Client_Miner_Start_Default_Threads did not set default cpu nunber as threads number")
+		t.Fatal("Test_Client_Miner_Start_Default_Threads did not set default cpu nunber as threads number")
 	}
 }
 
@@ -293,7 +293,7 @@ func Test_Client_Miner_Stop_Multiply(t *testing.T) {
 	}
 	cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
 	if _, err = cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Stop_Multiply returns ok")
+		t.Fatal("Test_Client_Miner_Stop_Multiply returns ok")
 	}
 }
 
@@ -332,7 +332,7 @@ func Test_Client_Miner_Setcoinbase_Valid(t *testing.T) {
 	}
 	account = bytes.TrimRight(account, "\n")
 	if string(account) != AccountShard1_1 {
-		t.Fatalf("Test_Client_Miner_Setcoinbase_Valid did not set the coinbase successfully")
+		t.Fatal("Test_Client_Miner_Setcoinbase_Valid did not set the coinbase successfully")
 	}
 
 	cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
@@ -362,35 +362,35 @@ func Test_Client_Miner_Setcoinbase_Valid(t *testing.T) {
 	}
 	account = bytes.TrimRight(account, "\n")
 	if string(account) != AccountShard1_2 {
-		t.Fatalf("Test_Client_Miner_Setcoinbase_Valid did not set the coinbase successfully")
+		t.Fatal("Test_Client_Miner_Setcoinbase_Valid did not set the coinbase successfully")
 	}
 }
 
 func Test_Client_Miner_Setcoinbase_InvalidParameter(t *testing.T) {
 	cmd := exec.Command(CmdClient, "miner", "setcoinbase", AccountShard1_1, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Setcoinbase_InvalidParameter returns ok")
+		t.Fatal("Test_Client_Miner_Setcoinbase_InvalidParameter returns ok")
 	}
 }
 
 func Test_Client_Miner_Setcoinbase_InvalidAccount(t *testing.T) {
 	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", AccountErr, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Setcoinbase_InvalidAccount return ok")
+		t.Fatal("Test_Client_Miner_Setcoinbase_InvalidAccount return ok")
 	}
 }
 
 func Test_Client_Miner_Setcoinbase_InvalidAccountType(t *testing.T) {
 	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", InvalidAccountType, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Setcoinbase_InvalidAccountType return ok")
+		t.Fatal("Test_Client_Miner_Setcoinbase_InvalidAccountType return ok")
 	}
 }
 
 func Test_Client_Miner_Setcoinbase_AccountFromOtherShard(t *testing.T) {
 	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", AccountShard2_1, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Miner_Setcoinbase_AccountFromOtherShard return ok")
+		t.Fatal("Test_Client_Miner_Setcoinbase_AccountFromOtherShard return ok")
 	}
 }
 
@@ -432,7 +432,7 @@ func Test_Client_Miner_SetThreads(t *testing.T) {
 		t.Fatalf("Test_Client_Miner_SetThreads: An error occured: %s", err.Error())
 	}
 	if string(n1) != "10\n" {
-		t.Fatalf("Test_Client_Miner_SetThreads did not set the threads number")
+		t.Fatal("Test_Client_Miner_SetThreads did not set the threads number")
 	}
 
 	cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
@@ -461,7 +461,7 @@ func Test_Client_Miner_SetThreads(t *testing.T) {
 		t.Fatalf("Test_Client_Miner_SetThreads: An error occured: %s", err.Error())
 	}
 	if string(n2) != "5\n" {
-		t.Fatalf("Test_Client_Miner_SetThreads did not set the threads number")
+		t.Fatal("Test_Client_Miner_SetThreads did not set the threads number")
 	}
 }
 
@@ -486,7 +486,7 @@ func Test_Client_Miner_SetThreads_Default(t *testing.T) {
 	}
 	cpuNum := runtime.NumCPU()
 	if int(n) != cpuNum {
-		t.Fatalf("Test_Client_Miner_SetThreads_Default did not set default cpu nunber as threads number")
+		t.Fatal("Test_Client_Miner_SetThreads_Default did not set default cpu nunber as threads number")
 	}
 }
 

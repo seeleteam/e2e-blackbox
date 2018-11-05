@@ -50,7 +50,7 @@ func Test_Client_P2P_Peers(t *testing.T) {
 		t.Fatalf("parse string to int64 failed %s", err.Error())
 	}
 	if n < 0 {
-		t.Fatalf("Test_Client_P2P_Peers returns invalid peer number")
+		t.Fatal("Test_Client_P2P_Peers returns invalid peer number")
 	}
 }
 
@@ -99,7 +99,7 @@ func Test_Light_P2P_Peers(t *testing.T) {
 		t.Fatalf("parse string to int64 failed %s", err.Error())
 	}
 	if n < 0 {
-		t.Fatalf("Test_Light_P2P_Peers returns invalid peer number")
+		t.Fatal("Test_Light_P2P_Peers returns invalid peer number")
 	}
 }
 
