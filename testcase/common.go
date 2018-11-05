@@ -33,6 +33,7 @@ type BlockHeader struct {
 
 type BlockInfo struct {
 	Hash         string        `json:"hash"`
+	Header       interface{}   `json:"header"`
 	Transactions []interface{} `json:"transactions"`
 	Header       BlockHeader   `json:"header"`
 }
