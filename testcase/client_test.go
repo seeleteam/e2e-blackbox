@@ -89,7 +89,7 @@ func Test_Client_DumpHeap(t *testing.T) {
 func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
-		t.Fatal("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
+		t.Fatalf("Test_Client_Dumpheap_Default_Filename get user path failed %s", err.Error())
 	}
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "heap.dump\n")
@@ -108,7 +108,7 @@ func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 func Test_Client_Dumpheap_Specified_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
-		t.Fatal("Test_Client_Dumpheap_Specified_Filename: Get user path failed %s", err.Error())
+		t.Fatalf("Test_Client_Dumpheap_Specified_Filename: Get user path failed %s", err.Error())
 	}
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "test.dump\n")
@@ -554,3 +554,116 @@ func Test_Client_SaveKey(t *testing.T) {
 }
 
 // --------------------test savekey end-------------------
+
+func Test_Client_GetBlockHeight_NodeStop(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblockheight", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockHeight error, %s", err)
+	}
+}
+
+func Test_Client_GetBlockHeight_NodeStart(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblockheight", "--address", ServerAddr)
+	if res, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockHeight error, %s", err)
+	} else {
+		if string(res) <= "0" {
+			t.Fatalf("Test_Client_GetBlockHeight_NodeStart: The return value is not correct!")
+		}
+	}
+}
+
+func Test_Client_GetBlockHeight_InvalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblockheight", "--height", "1000000000", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockHeight_InvalidParameter returns ok with invalid parameter")
+	}
+}
+
+func Test_Client_GetBlockHeight_ByInvalidHeight(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblockheight", "--height", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockHeight_ByInvalidHeight returns error not defined: -height")
+	}
+}
+
+func Test_Client_GetBlockHeight_Parameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblockheight", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockHeight_Parameter error, %s", err)
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByInvalidHeight(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--height", "100000000", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHeight error parameter success?")
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByInvalidHeight0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--height", "0x", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHeight0x return error invalid value")
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByHeight_NodeStart(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--height", "1", "--address", ServerAddr)
+	if res, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByHeight: error, %s", err)
+	} else {
+		if string(res) <= "0" {
+			t.Fatalf("Test_Client_GetBlockTXCount_ByHeight_NodeStart: The return value is not correct!")
+		}
+	}
+}
+
+func Test_Client_GetBlockTXCount_DefaultParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_DefaultParameter:error, %s", err)
+	}
+}
+
+func Test_Client_GetBlockTXCount_InvalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "1", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_InvalidParameter： error parameter success?")
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByInvalidHash(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", BlockHashErr, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHash： error parameter success?")
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByHash(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", BlockHash, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByHash: getblocktxcount error, %s", err)
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByInvalidHash0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", "0x", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Light_GetBlockTXCount_ByInvalidHash0x error parameter success?")
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByInvalidHash0x12(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", "0x12-", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHash0x12： return error syntax character")
+	}
+}
+
+func Test_Client_GetBlockTXCount_ByInvalidHash123(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", "123", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHash123： return error hex string without 0x prefix")
+	}
+}
