@@ -24,10 +24,26 @@ type BalanceInfo struct {
 	Balance int64
 }
 
-// BlockInfo block
+type BlockHeader struct {
+	CreateTimestamp   uint32
+	Difficulty        uint64
+	Height            uint64
+	PreviousBlockHash string
+}
+
 type BlockInfo struct {
 	Hash         string        `json:"hash"`
 	Transactions []interface{} `json:"transactions"`
+	Header       BlockHeader   `json:"header"`
+}
+
+type TxInfoInBlock struct {
+	Hash     string `json:"hash"`
+	From     string `json:"from"`
+	To       string `json:"to"`
+	Amount   int64  `json:"amount"`
+	GasPrice int64  `json:"gasPrice"`
+	GasLimit int64  `json:"gasLimit"`
 }
 
 // TxDataInfo tx data
@@ -83,6 +99,7 @@ type ReceiptInfo struct {
 	TotalFee int64         `json:"totalFee"`
 	UsedGas  int64         `json:"usedGas"`
 	Result   string        `json:"result"`
+	Hash     string        `json:"txhash"`
 	Logs     []interface{} `json:"logs"`
 }
 
@@ -138,6 +155,22 @@ func getBalance(t *testing.T, command, account, serverAddr string) (int64, error
 	return info.Balance, nil
 }
 
+func GetBlock(t *testing.T, command string, height int64, serverAddr string) (ret *BlockInfo, err error) {
+	cmd := exec.Command(command, "getblock", "--height", strconv.FormatInt(height, 10), "--address", serverAddr)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	var info BlockInfo
+	if err = json.Unmarshal(output, &info); err != nil {
+		return nil, err
+	}
+
+	ret = &info
+	return
+}
+
 func getNonce(t *testing.T, command, account, serverAddr string) (int, error) {
 	cmd := exec.Command(command, "getnonce", "--account", account, "--address", serverAddr)
 	//var curNonce int
@@ -182,10 +215,12 @@ func SendTx(t *testing.T, command string, amount, nonce, gaslimit int, keystore,
 	cmd.Wait()
 
 	outStr, errStr := out.String(), outErr.String()
+
 	if len(string(errStr)) > 0 {
 		err = errors.New(string(errStr))
 		return
 	}
+	fmt.Println("sendtx nonce=", nonce)
 
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
