@@ -8,8 +8,8 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
-  "fmt"
-  "io"
+	"fmt"
+	"io"
 	"math/big"
 	"os"
 	"os/exec"
