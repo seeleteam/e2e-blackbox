@@ -608,3 +608,1100 @@ func Test_Client_SaveKey(t *testing.T) {
 }
 
 // --------------------test savekey end-------------------
+
+// --------------------test getbalance start-------------------
+func Test_Client_GetBalance_Account_Invalid_With_Prefix_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getbalance", "--account", AccountErr, "--address", ServerAddr)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_With_Prefix_Odd: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "hex string of odd length") {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_With_Prefix_Odd,getbalance should return error with account of odd length: %s", errStr)
+	}
+}
+
+func Test_Client_GetBalance_Account_Invalid_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getbalance", "--account", "aaaaaaaaaaaaaaaaa", "--address", ServerAddr)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_Without_Prefix_0x: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "hex string without 0x prefix") {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_Without_Prefix_0x,getbalance should return error with account without prefix 0x: %s", errStr)
+	}
+}
+
+func Test_Client_GetBalance_Account_Invalid_Syntax_Characeter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getbalance", "--account", "0xaaaaaaaaaaaaaaaaa-", "--address", ServerAddr)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_Syntax_Characeter: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid hex string") {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_Syntax_Characeter,getbalance should return error with account has syntax character: %s", errStr)
+	}
+}
+
+func Test_Client_GetBalance_Account_Invalid_empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getbalance", "--account", "", "--address", ServerAddr)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid account") {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_empty,getbalance should return error with empty account: %s", errStr)
+	}
+}
+
+func Test_Client_GetBalance_Account_Invalid_FromOtherShard(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getbalance", "--account", Account2, "--address", ServerAddr)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_FromOtherShard: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "local shard is: 1, your shard is: 2, you need to change to shard 2 to get your balance") {
+		t.Fatalf("Test_Client_GetBalance_Account_Invalid_FromOtherShard,getbalance should return error with from other shard: %s", errStr)
+	}
+}
+
+func Test_Client_GetBalance_Account(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getbalance", "--account", Account1, "--address", ServerAddr)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetBalance_Account: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if errStr != "" {
+		t.Fatalf("Test_Client_GetBalance_Account,getbalance should return error with empty account: %s", errStr)
+	}
+}
+
+// --------------------test getbalance end-------------------
+
+// --------------------test getshardnum start-------------------
+func Test_Client_GetShardNum_Account_Invalid_With_Invalid_Type(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--account", ClientInvalidAccountType)
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_With_Invalid_Type: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "the account is invalid for: invalid hex string") {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_With_Invalid_Type,getshardnum should return error with invalid account type: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_Account_Invalid_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--account", "123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_Without_Prefix_0x: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "the account is invalid for: hex string without 0x prefix") {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_Without_Prefix_0x,getshardnum should return error with account without prefix 0x: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_Account_Invalid_With_Prefix_0x_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--account", "0x123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_With_Prefix_0x_Odd: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "the account is invalid for: hex string of odd length") {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_With_Prefix_0x_Odd,getshardnum should return error with account of odd length: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_Account_Invalid_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--account", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "the account is invalid for: empty hex string") {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_Empty,getshardnum should return error with empty account: %s", errStr)
+	}
+}
+func Test_Client_GetShardNum_Account_Invalid_Syntax_Character(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--account", "0x12345-")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_Syntax_Character: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "the account is invalid for: invalid hex string") {
+		t.Fatalf("Test_Client_GetShardNum_Account_Invalid_Syntax_Character,getshardnum should return error with account has syntax character: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_Account(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--account", Account2)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getshardnum error:%s", err)
+	} else {
+		if !strings.Contains(string(output), "2") {
+			t.Fatalf("Test_Client_GetShardNum_Account,getshardnum returns error shardnum")
+		}
+	}
+}
+
+func Test_Client_GetShardNum_PrivateKey_Invalid_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", "1234")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey_Invalid_Without_Prefix_0x: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "failed to load the private key: Input string not a valid ecdsa string") {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey_Invalid_Without_Prefix_0x,getshardnum should return error with privatekey without prefix 0x: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_PrivateKey_Invalid_With_Prefix_0x_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", "0x123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey_Invalid_With_Prefix_0x_Odd: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "failed to load the private key: encoding/hex: odd length hex string") {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey_Invalid_With_Prefix_0x_Odd,getshardnum should return error with privatekey of odd length: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_PrivateKey_Invalid_Syntax_Character(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", "0x12345-")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey_Invalid_Syntax_Character: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "failed to load the private key: encoding/hex: invalid byte: U+002D '-'") {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey_Invalid_Syntax_Character,getshardnum should return error with privatekey has syntax character: %s", errStr)
+	}
+}
+
+func Test_Client_GetShardNum_PrivateKey(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", AccountPrivateKey2)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetShardNum_PrivateKey,getshardnum error:%s", err)
+	} else {
+		if !strings.Contains(string(output), "2") {
+			t.Fatalf("Test_Client_GetShardNum_PrivateKey,getshardnum returns error shardnum")
+		}
+	}
+}
+
+// --------------------test getshardnum end-------------------
+
+// --------------------test key start-------------------
+func Test_Client_Key_Invalid_Shard_Greater_Than_2(t *testing.T) {
+	cmd := exec.Command(CmdClient, "key", "--shard", "3")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Key_Invalid_Shard_Greater_Than_2: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "not supported shard number, shard number should be [0, 2]") {
+		t.Fatalf("Test_Client_Key_Invalid_Shard_Greater_Than_2,key should return error with shard greater than 2: %s", errStr)
+	}
+}
+
+func Test_Client_Key_Invalid_Shard_Non_Numerical(t *testing.T) {
+	cmd := exec.Command(CmdClient, "key", "--shard", "a")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Key_Invalid_Shard_Non_Numerical: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"a\": invalid syntax") {
+		t.Fatalf("Test_Client_Key_Invalid_Shard_Non_Numerical,key should return error with shard non-numerical: %s", errStr)
+	}
+}
+
+func Test_Client_Key_Invalid_Shard_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "key", "--shard", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Key_Invalid_Shard_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"\": invalid syntax") {
+		t.Fatalf("Test_Client_Key_Invalid_Shard_Empty,key should return error with empty shard: %s", errStr)
+	}
+}
+
+// --------------------test key end-------------------
+
+// --------------------test sign start-------------------
+func Test_Client_Sign_Invalid_privatekey_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", "123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_Without_Prefix_0x: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "failed to load key Input string not a valid ecdsa string") {
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_Without_Prefix_0x,sign should return error with privatekey without prefix 0x: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_privatekey_With_Prefix_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", "0x123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Prefix_Odd: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "failed to load key encoding/hex: odd length hex string") {
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Prefix_Odd,sign should return error with privatekey of odd length: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_privatekey_With_Syntax_Characeter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", "0x12345-")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Syntax_Characeter: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "failed to load key encoding/hex: invalid byte: U+002D '-'") {
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Syntax_Characeter,sign should return error with privatekey has syntax character: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_To_Address_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid amount value") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_Empty,sign should return error with empty to address: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_To_Address_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_Without_Prefix_0x: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid receiver address: hex string without 0x prefix") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_Without_Prefix_0x,sign should return error with the to address without prefix 0x: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "0x123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid receiver address: hex string of odd length") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd,sign should return error with the to address of odd length: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "0x1234-")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid receiver address: hex string of odd length") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter,sign should return error with the to address has syntax character: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Amount_With_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Amount_With_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid amount value") {
+		t.Fatalf("Test_Client_Sign_Invalid_Amount_With_Empty,sign should return error with empty amount: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Amount_With_Non_Numerical(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "a")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Amount_With_Non_Numerical: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid amount value") {
+		t.Fatalf("Test_Client_Sign_Invalid_Amount_With_Non_Numerical,sign should return error with  amount non-numerical: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Price_With_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Price_With_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid gas price value") {
+		t.Fatalf("Test_Client_Sign_Invalid_Price_With_Empty,sign should return error with empty price: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Price_With_Non_Numerical(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "a")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Price_With_Non_Numerical: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid gas price value") {
+		t.Fatalf("Test_Client_Sign_Invalid_Price_With_Non_Numerical,sign should return error with price non-numerical: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Gaslimit_With_Non_Numerical(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "1", "--gas", "a")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Price_With_Non_Numerical: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"a\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Price_With_Non_Numerical,sign should return error with gas non-numerical: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Gaslimit_With_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Gaslimit_With_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Gaslimit_With_Empty,sign should return error with empty gas: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Gaslimit_With_Non_Integer(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "17.5")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Gaslimit_With_Non_Integer: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"17.5\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Gaslimit_With_Non_Int,sign should return error with gas non-integer: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Gaslimit_With_Negative_Integer(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "-17")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Gaslimit_With_Negative_Integer: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid value \"-17\" for flag -gas: strconv.ParseUint: parsing \"-17\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Gaslimit_With_Negative_Integer,sign should return error with gas negative integer: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Nonce_With_Negative_Integer(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "-1")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Negative_Integer: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "strconv.ParseUint: parsing \"-1\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Negative_Integer,sign should return error with nonce negative integer: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Nonce_With_Non_Integer(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "17.5")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Non_Integer: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"17.5\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Non_Integer,sign should return error with nonce non-integer: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Nonce_With_Non_Numeric(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "a")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Non_Numeric: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"a\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Non_Numeric,sign should return error with nonce non-numeric: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Nonce_With_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Nonce_With_Empty,sign should return error with empty nonce: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Payload_With_Empty(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Payload_With_Empty: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"\": invalid syntax") {
+		t.Fatalf("Test_Client_Sign_Invalid_Payload_With_Empty,sign should return error with empty payload: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Payload_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "aaa")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_Payload_Without_Prefix_0x: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "hex string without 0x prefix") {
+		t.Fatalf("Test_Client_Sign_Invalid_Payload_Without_Prefix_0x,sign should return error with the to address without prefix 0x: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Payload_With_Prefix_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "0x123")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "hex string of odd length") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd,sign should return error with the to address of odd length: %s", errStr)
+	}
+}
+
+func Test_Client_Sign_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "0x12345-")
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter: %s", err)
+	}
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+	fmt.Println("error----:", errStr)
+	if !strings.Contains(errStr, "invalid hex string") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter,sign should return error with the to address has syntax character: %s", errStr)
+	}
+}
+
+// --------------------test sign end-------------------
+
+// --------------------test sendtx start-------------------
+func Test_Client_SendTx_InvalidAccountLength(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard1_1, "--to", "0x")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountLength: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid address") {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountLength Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_InvalidAccountType(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountType: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, " unsupported address type") {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountType Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_InvalidAmountValue(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "", "--price", "1", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountValue: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid amount value") {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountValue Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_InvalidPriceValue(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountType: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "invalid gas price value") {
+		t.Fatalf("Test_Client_SendTx_InvalidAccountType Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_Unmatched_keyfile_And_Pass(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_Unmatched_keyfile_And_Pass: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123456\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "could not decrypt key with given passphrase") {
+		t.Fatalf("Test_Client_SendTx_Unmatched_keyfile_And_Pass Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_Invalid_Gas(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_Invalid_Gas: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"\": invalid syntax") {
+		t.Fatalf("Test_Client_SendTx_Invalid_Gas Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_Invalid_Payload_Without_Prefix_0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "-1")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_Invalid_Payload_Without_Prefix_0x: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+	fmt.Println("errStr=", errStr)
+	if !strings.Contains(errStr, "hex string without 0x prefix") {
+		t.Fatalf("Test_Client_SendTx_Invalid_Payload_Without_Prefix_0x Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_Invalid_Payload_With_Prefix_Odd(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "0x123")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_Invalid_Payload_With_Prefix_Odd: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+	fmt.Println("errStr=", errStr)
+	if !strings.Contains(errStr, "hex string of odd length") {
+		t.Fatalf("Test_Client_SendTx_Invalid_Payload_With_Prefix_Odd Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "0x12345-")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_Invalid_Payload_With_Syntax_Characeter: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+	fmt.Println("errStr=", errStr)
+	if !strings.Contains(errStr, "invalid hex string") {
+		t.Fatalf("Test_Client_SendTx_Invalid_Payload_With_Syntax_Characeter Err:%s", errStr)
+	}
+}
+
+func Test_Client_SendTx_Invalid_Nonce(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "1", "--nonce", "")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_SendTx_Invalid_Nonce: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "parsing \"\": invalid syntax") {
+		t.Fatalf("Test_Client_SendTx_Invalid_Nonce Err:%s", errStr)
+	}
+}
+
+// --------------------test sendtx end-------------------
+
+// --------------------test deckeyfile start-------------------
+func Test_Client_Deckeyfile_Invalid_Pass(t *testing.T) {
+	cmd := exec.Command(CmdClient, "deckeyfile", "--file", KeyFileShard2_1)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Deckeyfile_Invalid_Pass: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "1234\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "could not decrypt key with given passphrase") {
+		t.Fatalf("Test_Client_Deckeyfile_Invalid_Pass Err:%s", errStr)
+	}
+}
+
+func Test_Client_Deckeyfile_Invalid_Keyfile(t *testing.T) {
+	cmd := exec.Command(CmdClient, "deckeyfile", "--file", "../config/keyfile/shard1-0x1234567890")
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Deckeyfile_Invalid_Keyfile: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "1234\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+
+	if !strings.Contains(errStr, "The system cannot find the file specified") {
+		t.Fatalf("Test_Client_Deckeyfile_Invalid_Keyfile Err:%s", errStr)
+	}
+}
+
+func Test_Client_Deckeyfiles(t *testing.T) {
+	cmd := exec.Command(CmdClient, "deckeyfile", "--file", KeyFileShard2_1)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer stdin.Close()
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		t.Fatalf("Test_Client_Deckeyfiles: An error occured: %s", err)
+	}
+
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	_, errStr := out.String(), outErr.String()
+	fmt.Println("err = ", errStr)
+	if errStr != "" {
+		t.Fatalf("Test_Client_Deckeyfiles Err:%s", errStr)
+	}
+}
+
+// --------------------test deckeyfile end-------------------
