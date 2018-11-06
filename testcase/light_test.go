@@ -236,10 +236,10 @@ func Test_Light_SendTx_RemoveTimestamp(t *testing.T) {
 }
 */
 
-func test_light_SendTx_CrossShard(t *testing.T) {
+func Test_light_SendTx_CrossShard(t *testing.T) {
 	curNonce, err := getNonce(t, CmdLight, AccountShard1_4, ServerAddr)
 	if err != nil {
-		t.Fatalf("getnonce returns with error input", err)
+		t.Fatalf("getnonce returns with error input %s", err)
 	}
 
 	for cnt := 0; cnt < 100; cnt++ {
@@ -255,18 +255,18 @@ func test_light_SendTx_CrossShard(t *testing.T) {
 func Test_Light_SendManyTx(t *testing.T) {
 	curNonce, err := getNonce(t, CmdLight, AccountShard1_5, ServerAddr)
 	if err != nil {
-		t.Fatalf("getnonce returns with error input", err)
+		t.Fatalf("getnonce returns with error input %s", err)
 	}
 
 	var beginBalance, dstBeginBalance int64
 	beginBalance, err = getBalance(t, CmdLight, AccountShard1_5, ServerAddr)
 	if err != nil {
-		t.Fatalf("getBalance returns with error input", err)
+		t.Fatalf("getBalance returns with error input %s", err)
 	}
 
 	dstBeginBalance, err = getBalance(t, CmdLight, Account1_Aux2, ServerAddr)
 	if err != nil {
-		t.Fatalf("getBalance returns with error input", err)
+		t.Fatalf("getBalance returns with error input %s", err)
 	}
 
 	fmt.Println("fromAccount=", beginBalance, "dstAccount=", dstBeginBalance)
@@ -329,17 +329,17 @@ func Test_Light_SendManyTx(t *testing.T) {
 	var endBalance, dstEndBalance int64
 	endBalance, err = getBalance(t, CmdLight, AccountShard1_5, ServerAddr)
 	if err != nil {
-		t.Fatalf("getBalance returns with error input", err)
+		t.Fatalf("getBalance returns with error input %s", err)
 	}
 
 	dstEndBalance, err = getBalance(t, CmdLight, Account1_Aux2, ServerAddr)
 	if err != nil {
-		t.Fatalf("getBalance returns with error input", err)
+		t.Fatalf("getBalance returns with error input %s", err)
 	}
 
 	curNonceAfter, err = getNonce(t, CmdLight, AccountShard1_5, ServerAddr)
 	if err != nil {
-		t.Fatalf("getnonce returns with error input", err)
+		t.Fatalf("getnonce returns with error input %s", err)
 	}
 
 	fmt.Println("account1=", endBalance, "dstAccount=", dstEndBalance)
@@ -351,7 +351,7 @@ func Test_Light_SendManyTx(t *testing.T) {
 	}
 }
 
-func test_Light_GetReceipt_old(t *testing.T) {
+func Test_Light_GetReceipt_old(t *testing.T) {
 	curNonce, err := getNonce(t, CmdLight, AccountShard1_5, ServerAddr)
 	if err != nil {
 		t.Fatalf("getnonce returns with error input err: %s", err)
@@ -587,7 +587,7 @@ func Test_Light_GetNonce_AccountFromOtherShard(t *testing.T) {
 	}
 }
 
-func test_CheckChain_Consistent(t *testing.T) {
+func Test_CheckChain_Consistent(t *testing.T) {
 	block, err := GetBlock(t, CmdClient, -1, ServerAddr)
 	if err != nil {
 		t.Fatalf("Test_CheckChain_Consistent getBlock err. %s", err)

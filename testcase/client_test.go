@@ -768,3 +768,98 @@ func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
 		}
 	}
 }
+
+func Test_Client_GetLogs_ValidParameter(t *testing.T) {
+	contract, height, topics, err := deployContractAndSendTx(t)
+	if err != nil {
+		t.Fatalf("Test_Client_GetLogs_ValidParameter err %s", err.Error())
+	}
+	for _, topic := range topics {
+		cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", contract, "--topic", topic, "--address", ServerAddr)
+		if result, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("Test_Client_GetLogs_ValidParameter: An error occured: %s", err)
+		} else {
+			var logs []LogByTopic
+			if err = json.Unmarshal(result, &logs); err != nil {
+				t.Fatalf("Test_Client_GetLogs_ValidParameter getlogs unmarshal err %s", err)
+			}
+			if len(logs) != 1 {
+				t.Fatal("Test_Client_GetLogs_ValidParameter returns log number is not 1")
+			}
+		}
+	}
+}
+
+func Test_Client_GetLogs_Invalid_Topic(t *testing.T) {
+	contract, height, _, err := deployContractAndSendTx(t)
+	if err != nil {
+		t.Fatalf("Test_Client_GetLogs_Invalid_Topic err %s", err.Error())
+	}
+	errTopic := "0xaaaaaa"
+	cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", contract, "--topic", errTopic, "--address", ServerAddr)
+	a, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetLogs_Invalid_Topic: An error occured: %s", err)
+	}
+	if string(a) != "[]\n" {
+		t.Fatalf("Test_Client_GetLogs_Invalid_Topic returns a log")
+	}
+}
+
+func Test_Client_GetLogs_Invalid_Contract(t *testing.T) {
+	_, height, topics, err := deployContractAndSendTx(t)
+	if err != nil {
+		t.Fatalf("Test_Client_GetLogs_Invalid_Contract err %s", err.Error())
+	}
+	errContract := "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	for _, topic := range topics {
+		cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", ServerAddr)
+		if result, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("Test_Client_GetLogs_Invalid_Contract: An error occured: %s", err)
+		} else {
+			var logs []LogByTopic
+			if err = json.Unmarshal(result, &logs); err != nil {
+				t.Fatalf("Test_Client_GetLogs_Invalid_Contract getlogs unmarshal err %s", err)
+			}
+			if len(logs) != 0 {
+				t.Fatal("Test_Client_GetLogs_Invalid_Contract returns log number is not 0")
+			}
+		}
+	}
+}
+
+func Test_Client_GetLogs_Invalid_Length_Contract(t *testing.T) {
+	_, height, topics, err := deployContractAndSendTx(t)
+	if err != nil {
+		t.Fatalf("Test_Client_GetLogs_Invalid_Length_Contract err %s", err.Error())
+	}
+	errContract := "0xaaaaaaaaaaaaaaaaaaaaa"
+	for _, topic := range topics {
+		cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", ServerAddr)
+		if _, err := cmd.CombinedOutput(); err == nil {
+			t.Fatalf("Test_Client_GetLogs_Invalid_Length_Contract return ok")
+		}
+	}
+}
+
+func Test_Client_GetLogs_Invalid_height(t *testing.T) {
+	contract, _, topics, err := deployContractAndSendTx(t)
+	if err != nil {
+		t.Fatalf("Test_Client_GetLogs_Invalid_height err %s", err.Error())
+	}
+	errHeight := "-1"
+	for _, topic := range topics {
+		cmd := exec.Command(CmdClient, "getlogs", "--height", errHeight, "--contract", contract, "--topic", topic, "--address", ServerAddr)
+		if result, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("Test_Client_GetLogs_Invalid_height: An error occured: %s", err)
+		} else {
+			var logs []LogByTopic
+			if err = json.Unmarshal(result, &logs); err != nil {
+				t.Fatalf("Test_Client_GetLogs_Invalid_height getlogs unmarshal err %s", err)
+			}
+			if len(logs) != 0 {
+				t.Fatal("Test_Client_GetLogs_Invalid_height returns log number is not 0")
+			}
+		}
+	}
+}
