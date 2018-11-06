@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"io/ioutil"
 )
 
 // BalanceInfo balance
@@ -120,6 +121,22 @@ type SendTxInfo struct {
 	amount  int64
 	gasUsed int
 	bMined  bool
+}
+
+// LogByTopic contains Seele log
+type LogByTopic struct {
+	Log      Log    `json:"log"`
+	LogIndex int    `json:"logIndex"`
+	Txhash   string `json:"txhash"`
+}
+
+// Log contains Seele log of topic
+type Log struct {
+	Address          string   `json:"address"`
+	BklockNumber     uint     `json:"blockNumber"`
+	Data             string   `json:"data"`
+	Topics           []string `json:"topics"`
+	TransactionIndex int      `json:"transactionIndex"`
 }
 
 func accountCase(command, account, accountMix string, t *testing.T) {
@@ -340,4 +357,137 @@ func findTxHashFromPool(txHash string, infoL *[]PoolTxInfo, infoM *map[string][]
 // generateTime generate time
 func generateTime(minutes int64) int64 {
 	return time.Now().Unix() + minutes*60
+}
+
+func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
+	contract, err := ioutil.ReadFile("./contract/simplestorage/SimpleEvent.bin")
+	if err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx read contract failed %s", err.Error())
+	}
+	cmd := exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_1, "--amount", "0", "--payload", string(contract), "--address", ServerAddr)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx create contract err %s", err.Error())
+	}
+	defer stdin.Close()
+
+	var (
+		out    bytes.Buffer
+		outErr bytes.Buffer
+	)
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx: An error occured: %s", err.Error())
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	output, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx cmd err: %s", errStr)
+	}
+	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(str), &txInfo); err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx create contract unmarshal err: %s", err)
+	}
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			return "", "", nil, fmt.Errorf("deployContractAndSendTx get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(20)
+
+	receipt, err := GetReceipt(t, CmdClient, txInfo.Hash, ServerAddr)
+	if err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx get receipt err: %s", err)
+	}
+	if receipt.Failed {
+		return "", "", nil, errors.New("deployContractAndSendTx tx operation fault")
+	}
+
+	cmd = exec.Command(CmdLight, "payload", "--abi", "./contract/simplestorage/SimpleEvent.abi", "--method", "get")
+	method, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", "", nil, errors.New("deployContractAndSendTx returns false with valid parameter")
+	}
+	method = method[9 : len(method)-1]
+	cmd = exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_1, "--to", receipt.Contract,
+		"--amount", "0", "--payload", string(method), "--address", ServerAddr)
+	stdin, err = cmd.StdinPipe()
+	if err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx call contract err: %s", err)
+	}
+
+	out.Reset()
+	outErr.Reset()
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx: An error occured: %s", err)
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	output1, errStr := out.String(), outErr.String()
+	if errStr != "" {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx cmd err: %s", errStr)
+	}
+	str1 := output1[strings.Index(output1, "{") : strings.LastIndex(output1, "}")+1]
+	var tx TxInfo
+	if err = json.Unmarshal([]byte(str1), &tx); err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx call contract tx unmarshal err: %s", err)
+	}
+	for {
+		time.Sleep(10)
+		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err != nil {
+			return "", "", nil, fmt.Errorf("deployContractAndSendTx get pool count err: %s", err)
+		}
+
+		if number == 0 {
+			break
+		}
+	}
+
+	time.Sleep(20)
+
+	receipt1, err := GetReceipt(t, CmdClient, tx.Hash, ServerAddr)
+	if err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx get receipt err: %s", err)
+	}
+
+	if receipt1.Failed {
+		return "", "", nil, errors.New("deployContractAndSendTx tx operation fault")
+	}
+	var topics []string
+	for _, log := range receipt1.Logs {
+		l := log.(map[string]interface{})
+		topic := l["topic"].(string)
+		topics = append(topics, topic)
+	}
+	if len(topics) != 1 {
+		return "", "", nil, errors.New("deployContractAndSendTx returns log number is not 1")
+	}
+	cmd = exec.Command(CmdClient, "gettxbyhash", "--hash", tx.Hash, "--address", ServerAddr)
+	result, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx: An error occured: %s", err)
+	}
+
+	var txByHash map[string]interface{}
+	if err = json.Unmarshal([]byte(result), &txByHash); err != nil {
+		return "", "", nil, fmt.Errorf("deployContractAndSendTx get tx by hash unmarshal err: %s", err)
+	}
+	blockHeight := uint64(txByHash["blockHeight"].(float64))
+	height := strconv.FormatUint(blockHeight, 10)
+	return receipt.Contract, height, topics, nil
 }
