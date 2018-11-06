@@ -20,14 +20,6 @@ import (
 	"testing"
 )
 
-type ResGetInfo struct {
-	CurrentBlockHeight int64  `json:"CurrentBlockHeight"`
-	HeaderHash         string `json:"HeaderHash"`
-	MinerStatus        string `json:"MinerStatus"`
-	Shard              int    `json:"Shard"`
-	Coinbase           string `json:"Coinbase"`
-}
-
 func Test_Client_GetInfo(t *testing.T) {
 	cmd := exec.Command(CmdClient, "getinfo")
 	res, err := cmd.CombinedOutput()
@@ -80,7 +72,23 @@ func Test_Client_DumpHeap(t *testing.T) {
 	}
 
 	if _, err = os.Stat(strings.TrimSpace(string(res))); os.IsNotExist(err) {
-		t.Fatalf("Test_Client_DumpHeap: file %s not found!", string(res))
+		t.Fatalf("Test_Client_DumpHeap:  File %s not found!", string(res))
+	}
+}
+
+func Test_Client_Domain(t *testing.T) {
+	cmd := exec.Command(CmdClient, "domain", "owner")
+	res, err := cmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("Test_Client_Domain: domain owner error, %s %s", string(res), err)
+	}
+
+	cmd = exec.Command(CmdClient, "domain", "register")
+	res, err = cmd.CombinedOutput()
+
+	if err != nil {
+		t.Fatalf("Test_Client_Domain: domain register error, %s %s", string(res), err)
 	}
 }
 

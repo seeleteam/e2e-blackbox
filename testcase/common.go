@@ -19,6 +19,15 @@ import (
 	"io/ioutil"
 )
 
+// ResGetinfo
+type ResGetInfo struct {
+	CurrentBlockHeight int64  `json:"CurrentBlockHeight"`
+	HeaderHash         string `json:"HeaderHash"`
+	MinerStatus        string `json:"MinerStatus"`
+	Shard              int    `json:"Shard"`
+	Coinbase           string `json:"Coinbase"`
+}
+
 // BalanceInfo balance
 type BalanceInfo struct {
 	Account string
