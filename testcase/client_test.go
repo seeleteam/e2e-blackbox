@@ -8,6 +8,7 @@ package testcase
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func Test_Client_GetInfo(t *testing.T) {
@@ -2019,6 +2021,162 @@ func Test_Client_GetLogs_Invalid_height(t *testing.T) {
 			if len(logs) != 0 {
 				t.Fatal("Test_Client_GetLogs_Invalid_height returns log number is not 0")
 			}
+		}
+	}
+}
+
+func Test_Client_GetNonce_ByAccount(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getnonce", "--account", Account1_Aux, "--address", ServerAddr)
+	if res, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("getnonce returns with error input err: %s", err)
+	} else {
+		res = bytes.TrimRight(res, "\n")
+		nonce, _ := strconv.ParseInt(string(res), 10, 64)
+		if nonce < 0 {
+			t.Fatalf("Test_Client_GetNonce_InvalidAccount: Nonce value is not correct!")
+		}
+	}
+}
+
+func Test_Client_GetNonce_InvalidAccount0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getnonce", "--account", "0x", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetNonce_InvalidAccount0x returns err: %s", err)
+	}
+}
+
+func Test_Client_GetNonce_InvalidAccount(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getnonce", "--account", AccountErr, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetNonce_InvalidAccount returns error： hex string of odd length")
+	}
+}
+
+func Test_Client_GetNonce_NoParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getnonce", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetNonce_NoParameter returns error： invalid account")
+	}
+}
+
+func Test_Client_GetNonce_invalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getnonce", Account1_Aux, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetNonce_invalidParameter returns error： invalid account")
+	}
+}
+
+func Test_Client_GetNonce_AccountFromOtherShard(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getnonce", "--account", AccountShard1_1, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GetNonce_AccountFromOtherShard:getnonce returns successfully for other shard account")
+	}
+}
+
+func Test_Client_GetReceipt_ByInvalidHash0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getreceipt", "0x", "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetReceipt_ByInvalidHash0x error: empty hex string")
+	}
+}
+
+func Test_Client_GetReceipt_InvalidParameter(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	cmd = exec.Command(CmdClient, "getreceipt", txInfo.Hash, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GetReceipt  error ：Grammar is not correct")
+	}
+
+}
+func Test_Client_SendManyTx(t *testing.T) {
+	curNonce, err := getNonce(t, CmdClient, AccountShard1_5, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_Client_SendManyTx : getnonce returns with error input %s", err)
+	}
+
+	beginBalance, err := getBalance(t, CmdClient, AccountShard1_5, ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_Client_SendManyTx : getBalance returns with error input  %s", err)
+	}
+	if beginBalance == 0 {
+		t.Fatalf("Test_Client_SendManyTx : getBalance Insufficient amount of account")
+	}
+
+	var txHash string
+	var sendTxL []*SendTxInfo
+
+	for cnt := 0; cnt < 5; cnt++ {
+		itemNonce := curNonce + 2 + cnt
+		txHash, _, err = SendTx(t, CmdClient, 100, itemNonce, 2100, KeyFileShard1_5, Account1_Aux2, "", ServerAddr)
+		if err != nil {
+			t.Fatalf("Test_Client_SendManyTx: An error occured: %s", err)
+		}
+
+		info := &SendTxInfo{
+			nonce:  itemNonce,
+			hash:   txHash,
+			bMined: false,
+		}
+		sendTxL = append(sendTxL, info)
+	}
+
+	cnt := 0
+	for {
+		pendingL, err1 := getPendingTxs(t, CmdClient, ServerAddr)
+		if err1 != nil {
+			t.Fatalf("Test_Client_SendManyTx : getPendingTxs err:%s", err1)
+		}
+		contentM, err2 := getPoolContentTxs(t, CmdClient, ServerAddr)
+		if err2 != nil {
+			t.Fatalf("Test_Client_SendManyTx : getPoolContentTxs err:%s", err2)
+		}
+		_, err3 := getPoolCountTxs(t, CmdClient, ServerAddr)
+		if err3 != nil {
+			t.Fatalf("Test_Client_SendManyTx : getPoolCountTxs err:%s", err3)
+		}
+		if len(pendingL)+len(contentM) == 0 {
+			break
+		}
+		cnt++
+	}
+	time.Sleep(8 * time.Second)
+	validCnt := 0
+	for _, sendTxInfo := range sendTxL {
+		info, err3 := GetReceipt(t, CmdClient, sendTxInfo.hash, ServerAddr)
+		if err3 == nil {
+			if info.Hash != sendTxInfo.hash {
+				fmt.Println("Test_Client_SendManyTx :  Receipt Hash not match with tx")
+			}
+			validCnt++
+			sendTxInfo.bMined = true
+		} else {
+			fmt.Println("Test_Client_SendManyTx : getReceipt err. nonce=", sendTxInfo.nonce, err3)
 		}
 	}
 }
