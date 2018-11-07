@@ -2180,3 +2180,105 @@ func Test_Client_SendManyTx(t *testing.T) {
 		}
 	}
 }
+
+func Test_Client_GetTxInBlock_ByHeightindex(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--height", "1", "--index", "0")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHeightindex err=%s", err)
+	}
+}
+
+func Test_Client_GetTxInBlock_ByHeight(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--height", "1")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHeight err=%s", err)
+	}
+}
+
+func Test_Client_GetTxInBlock_ByInvalidHeight(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--height", "1000000000", "--index", "0")
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByInvalidHeight err=leveldb: not found")
+	}
+}
+
+func Test_Client_GetTxInBlock_ByHashindex(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", BlockHash, "--index", "0")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHashindex err=%s", err)
+	}
+}
+
+func Test_Client_GetTxInBlock_ByHash(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", BlockHash)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHash err=%s", err)
+	}
+}
+
+func Test_Client_GetTxInBlock_ByHashErr(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", BlockHashErr, "--index", "0")
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHashErr err=leveldb: not found")
+	}
+}
+
+func Test_Client_GetTxInBlock_ByHash0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", "0x", "--index", "0")
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHash0x err=empty hex string")
+	}
+}
+
+func Test_Client_GettxByHash(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	cmd = exec.Command(CmdClient, "gettxbyhash", "--hash", txInfo.Hash, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_GettxByHash  error ：%s", err)
+	}
+	cmd = exec.Command(CmdClient, "gettxbyhash", txInfo.Hash, "--address", ServerAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_GettxByHash error ： empty hex string")
+	}
+}
+
+func Test_Client_GettxByHash0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "gettxbyhash", "--hash", "0x", "--index", "0")
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_GetTxInBlock_ByHash0x err=empty hex string")
+	}
+}
