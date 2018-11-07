@@ -993,21 +993,21 @@ func Test_Client_Sign_Invalid_privatekey_With_Prefix_Odd(t *testing.T) {
 	}
 }
 
-func Test_Client_Sign_Invalid_privatekey_With_Syntax_Characeter(t *testing.T) {
+func Test_Client_Sign_Invalid_privatekey_With_Syntax_Character(t *testing.T) {
 	cmd := exec.Command(CmdClient, "sign", "--privatekey", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err := cmd.Start(); err != nil {
-		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Syntax_Characeter: %s", err)
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Syntax_Character: %s", err)
 	}
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
 
 	if !strings.Contains(errStr, "failed to load key encoding/hex: invalid byte: U+002D '-'") {
-		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Syntax_Characeter,sign should return error with privatekey has syntax character: %s", errStr)
+		t.Fatalf("Test_Client_Sign_Invalid_privatekey_With_Syntax_Character,sign should return error with privatekey has syntax character: %s", errStr)
 	}
 }
 
@@ -1065,21 +1065,21 @@ func Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd(t *testing.T) {
 	}
 }
 
-func Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "0x1234-")
+func Test_Client_Sign_Invalid_To_Address_With_Syntax_Character(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err := cmd.Start(); err != nil {
-		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter: %s", err)
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Character: %s", err)
 	}
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-
-	if !strings.Contains(errStr, "invalid receiver address: hex string of odd length") {
-		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter,sign should return error with the to address has syntax character: %s", errStr)
+	fmt.Println(errStr)
+	if !strings.Contains(errStr, "invalid receiver address: invalid hex string") {
+		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Character,sign should return error with the to address has syntax character: %s", errStr)
 	}
 }
 
@@ -1684,7 +1684,7 @@ func Test_Client_Deckeyfile_Invalid_Keyfile(t *testing.T) {
 
 	_, errStr := out.String(), outErr.String()
 
-	if !strings.Contains(errStr, "The system cannot find the file specified") {
+	if !strings.Contains(errStr, "invalid key file") {
 		t.Fatalf("Test_Client_Deckeyfile_Invalid_Keyfile Err:%s", errStr)
 	}
 }
