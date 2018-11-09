@@ -11,12 +11,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
-	"io/ioutil"
 )
 
 // ResGetinfo
