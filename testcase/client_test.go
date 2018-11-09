@@ -1805,7 +1805,33 @@ func Test_Client_GetBlockTXCount_ByInvalidHash(t *testing.T) {
 }
 
 func Test_Client_GetBlockTXCount_ByHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", BlockHash, "--address", ServerAddr)
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	blockHash := Gettxbyhash(txInfo.Hash)
+	cmd = exec.Command(CmdClient, "getblocktxcount", "--hash", blockHash, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByHash: getblocktxcount error, %s", err)
 	}
@@ -1875,15 +1901,39 @@ func Test_Client_GetBlock_InvalidParameter(t *testing.T) {
 }
 
 func Test_Client_GetBlock_ByNormalHash(t *testing.T) {
-	// invalid height
-	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHash, "--address", ServerAddr)
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	blockHash := Gettxbyhash(txInfo.Hash)
+	cmd = exec.Command(CmdClient, "getblock", "--hash", blockHash, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByNormalHash error, %s", err)
 	}
 }
 
 func Test_Client_GetBlock_ByInvalidHash(t *testing.T) {
-	// invalid height
 	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHashErr, "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlock_ByInvalidHash error parameter success?")
@@ -1913,7 +1963,33 @@ func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
 
 // getblock fulltx support.
 func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHash, "--fulltx", "--address", ServerAddr)
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	blockHash := Gettxbyhash(txInfo.Hash)
+	cmd = exec.Command(CmdClient, "getblock", "--hash", blockHash, "--fulltx", "--address", ServerAddr)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByHashFulltx error, %s", err)
 	} else {
@@ -1921,7 +1997,7 @@ func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
 		if err = json.Unmarshal(output, &blockInfo); err != nil {
 			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: %s", err)
 		}
-		if blockInfo.Hash != BlockHash {
+		if blockInfo.Hash != blockHash {
 			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: Expect the return value is not correct!")
 		}
 		if len(blockInfo.Transactions) <= 0 {
@@ -2267,8 +2343,35 @@ func Gettxbyhash(txhash string) (blockHash string) {
 }
 
 func Test_Client_GetTxInBlock_ByHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", BlockHash)
-	_, err := cmd.CombinedOutput()
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+
+	blockHash := Gettxbyhash(txInfo.Hash)
+	cmd = exec.Command(CmdClient, "gettxinblock", "--hash", blockHash)
+	_, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHash err=%s", err)
 	}
