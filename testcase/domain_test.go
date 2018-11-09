@@ -277,7 +277,7 @@ func domainInvalidOwner(t *testing.T, funcName, keyFile, passWord, price, gas, n
 		nonce = fmt.Sprintf("%d", accountNonce)
 	}
 
-	cmd := exec.Command(CmdClient, "domain", "woner", "--from", keyFile, "--price", price, "--gas", gas,
+	cmd := exec.Command(CmdClient, "domain", "owner", "--from", keyFile, "--price", price, "--gas", gas,
 		"--nonce", nonce, "--name", domainName)
 
 	stdin, err := cmd.StdinPipe()
