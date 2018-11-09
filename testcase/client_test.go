@@ -2084,19 +2084,11 @@ func Test_Client_GetLogs_Invalid_height(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_Invalid_height err %s", err.Error())
 	}
-	errHeight := "-1"
+	errHeight := "1.5"
 	for _, topic := range topics {
 		cmd := exec.Command(CmdClient, "getlogs", "--height", errHeight, "--contract", contract, "--topic", topic, "--address", ServerAddr)
-		if result, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("Test_Client_GetLogs_Invalid_height: An error occured: %s", err)
-		} else {
-			var logs []LogByTopic
-			if err = json.Unmarshal(result, &logs); err != nil {
-				t.Fatalf("Test_Client_GetLogs_Invalid_height getlogs unmarshal err %s", err)
-			}
-			if len(logs) != 0 {
-				t.Fatal("Test_Client_GetLogs_Invalid_height returns log number is not 0")
-			}
+		if _, err := cmd.CombinedOutput(); err == nil {
+			t.Fatal("Test_Client_GetLogs_Invalid_height returns ok")
 		}
 	}
 }
