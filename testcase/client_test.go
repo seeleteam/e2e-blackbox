@@ -2206,11 +2206,64 @@ func Test_Client_GetTxInBlock_ByInvalidHeight(t *testing.T) {
 }
 
 func Test_Client_GetTxInBlock_ByHashindex(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", BlockHash, "--index", "0")
-	_, err := cmd.CombinedOutput()
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	blockHash := Gettxbyhash(txInfo.Hash)
+	cmd = exec.Command(CmdClient, "gettxinblock", "--hash", blockHash, "--index", "0")
+	_, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHashindex err=%s", err)
 	}
+}
+
+func Gettxbyhash(txhash string) (blockHash string) {
+	cmd := exec.Command(CmdClient, "gettxbyhash", "--hash", "0xf8e3eac825cea8a6fed943c4c8536917d9e77a194379c8fdc14f9b460ee57beb", "--address", "127.0.0.1:8027")
+	_, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	blocktxInfo := make(map[string]interface{})
+	if err = json.Unmarshal([]byte(outStr), &blocktxInfo); err != nil {
+		return
+	}
+	blockHash = blocktxInfo["blockHash"].(string)
+	return blockHash
 }
 
 func Test_Client_GetTxInBlock_ByHash(t *testing.T) {
