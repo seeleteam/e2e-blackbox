@@ -78,22 +78,6 @@ func Test_Client_DumpHeap(t *testing.T) {
 	}
 }
 
-func Test_Client_Domain(t *testing.T) {
-	cmd := exec.Command(CmdClient, "domain", "owner")
-	res, err := cmd.CombinedOutput()
-
-	if err != nil {
-		t.Fatalf("Test_Client_Domain: domain owner error, %s %s", string(res), err)
-	}
-
-	cmd = exec.Command(CmdClient, "domain", "register")
-	res, err = cmd.CombinedOutput()
-
-	if err != nil {
-		t.Fatalf("Test_Client_Domain: domain register error, %s %s", string(res), err)
-	}
-}
-
 func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	userPath, err := user.Current()
 	if err != nil {
