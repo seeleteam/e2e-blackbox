@@ -1,0 +1,11 @@
+{
+    "name": "seelecoin",
+    "version": "1.0",
+    "staticNodes": [],
+    "tokenFullName": "seelecoin",
+    "tokenShortName": "seele1",
+    "tokenAmount": 110,
+    "genesisDifficulty": 8000000,
+    "genesisAccounts": {},
+    "owner": "0x0000000000000000000000000000000000000000"
+}
