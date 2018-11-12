@@ -1,0 +1,11 @@
+{
+    "name": "testsubchaintemplate",
+    "version": "",
+    "staticNodes": [],
+    "tokenFullName": "seelecoin1",
+    "tokenShortName": "seele1",
+    "tokenAmount": 0,
+    "genesisDifficulty": 8000000,
+    "genesisAccounts": {},
+    "owner": "0x0000000000000000000000000000000000000000"
+}
