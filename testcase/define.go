@@ -13,6 +13,8 @@ var (
 	ServerAddr string = "127.0.0.1:8027"
 	AccountErr string = "0xaaaaaaaaaaaaaaaaa"
 
+	ServertwoAddr string = "127.0.0.1:8028"
+
 	Account1_Aux  string = "0x7c00f5a4312a6a3e458a07c2d650ce13c76b68b1"
 	Account1_Aux2 string = "0xa00d22dc3624d4696eff8d1641b442f79c3379b1" // account for shard1
 
