@@ -2414,3 +2414,84 @@ func Test_Client_GettxByHash0x(t *testing.T) {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHash0x err=empty hex string")
 	}
 }
+
+func Test_Client_Getdebtbyhash(t *testing.T) {
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", AccountShard2_2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
+	outStr = outStr[strings.Index(outStr, "It is a cross shard transaction, its debt is:"):]
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo TxInfo
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+ErrContinue:
+	cmd = exec.Command(CmdClient, "getdebtbyhash", "--hash", txInfo.Hash, "--address", ServertwoAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		goto ErrContinue
+		t.Fatalf("Test_Client_Getdebtbyhash  error ：%s", err)
+	}
+
+	cmd = exec.Command(CmdClient, "getdebtbyhash", txInfo.Hash, "--address", ServertwoAddr)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		t.Fatalf("Test_Client_Getdebtbyhash  error ：empty hex string")
+	}
+}
+
+func Test_Client_Getdebtbyhash0x(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getdebtbyhash", "--hash", "0x")
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_Getdebtbyhash0x err=empty hex string")
+	}
+}
+
+func Test_Client_GetdebtbyhashAddr(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getdebtbyhash", "--hash", "0x", "--address", ServerAddr)
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
+	}
+}
+
+func Test_Client_GetdebtbyhashtwoAddr(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getdebtbyhash", "--hash", "0x", "--address", ServertwoAddr)
+	_, err := cmd.CombinedOutput()
+	if err == nil {
+		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
+	}
+}
+
+func Test_Client_Getdebts(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getdebts")
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
+	}
+}
+
+func Test_Client_GetdebtstwoAddr(t *testing.T) {
+	cmd := exec.Command(CmdClient, "getdebts", "--address", ServertwoAddr)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
+	}
+}
