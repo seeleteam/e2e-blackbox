@@ -252,6 +252,40 @@ func Test_light_SendTx_CrossShard(t *testing.T) {
 	}
 }
 
+func Test_Light_TxInPool(t *testing.T) {
+	curNonce, err := getNonce(t, CmdLight, AccountShard1_3, ServerAddr)
+	if err != nil {
+		t.Fatalf("getnonce returns with error input", err)
+	}
+	fmt.Println("nonce=", curNonce)
+	var beginBalance, dstBeginBalance int64
+	beginBalance, err = getBalance(t, CmdLight, AccountShard1_3, ServerAddr)
+	if err != nil {
+		t.Fatalf("getBalance returns with error input", err)
+	}
+
+	dstBeginBalance, err = getBalance(t, CmdLight, Account1_Aux, ServerAddr)
+	if err != nil {
+		t.Fatalf("getBalance returns with error input", err)
+	}
+
+	fmt.Println("fromAccount=", beginBalance, "dstAccount=", dstBeginBalance)
+	var txHash string
+	itemNonce := curNonce + 1
+	txHash, _, err = SendTx(t, CmdLight, 10000, itemNonce, 21000, KeyFileShard1_3, Account1_Aux, "", ServerAddr)
+	if err != nil {
+		t.Fatalf("Test_Light_SendTx: An error occured: %s", err)
+	}
+	time.Sleep(2 * time.Second)
+	info, err3 := GetTxByHash(t, CmdLight, txHash, ServerAddr)
+
+	if err3 != nil {
+		//fmt.Println("GetTxByHash info=", info, "err=", err3)
+		t.Fatalf("Test_Light_SendTx: An error occured when GetTxByHash:%s %s", info, err3)
+	}
+	//fmt.Println("../bin/client gettxbyhash --hash ", txHash)
+}
+
 func Test_Light_SendManyTx(t *testing.T) {
 	curNonce, err := getNonce(t, CmdLight, AccountShard1_5, ServerAddr)
 	if err != nil {
@@ -348,6 +382,11 @@ func Test_Light_SendManyTx(t *testing.T) {
 	fmt.Println("validTx=", validCnt, "account1_times=", (beginBalance-endBalance)/31000)
 	for _, sendTxInfo := range sendTxL {
 		fmt.Println("./client gettxbyhash --hash ", sendTxInfo.hash)
+	}
+
+	for _, sendTxInfo := range sendTxL {
+		fmt.Println("./client getreceipt --hash ", sendTxInfo.hash)
+
 	}
 }
 
@@ -609,6 +648,8 @@ func Test_CheckChain_Consistent(t *testing.T) {
 	allTime := uint32(0)
 	maxTime := uint32(0)
 	intL := make([]int, 10)
+	allTXs := 0
+	blockCnt := 0
 	for cur := uint64(1); cur <= toHeight; cur++ {
 		block, err = GetBlock(t, CmdClient, int64(cur), ServerAddr)
 		if err != nil {
@@ -628,7 +669,7 @@ func Test_CheckChain_Consistent(t *testing.T) {
 		}
 
 		diffTime := block.Header.CreateTimestamp - preTimestamp
-
+		blockCnt = blockCnt + 1
 		if diffTime < 10000 {
 			allTime = allTime + diffTime
 			idx := diffTime / 10
@@ -642,13 +683,15 @@ func Test_CheckChain_Consistent(t *testing.T) {
 			}
 		}
 		preHash, preTimestamp, preHeight = block.Hash, block.Header.CreateTimestamp, block.Header.Height
-
+		allTXs = allTXs + len(block.Transactions)
 		if cur%1000 == 0 {
-			fmt.Println("Test_CheckChain_Consistent checked. cur=", cur)
+			fmt.Println("Test_CheckChain_Consistent checked. cur=", cur, " txs=", allTXs)
 		}
 	}
 
 	fmt.Println("Test_CheckChain_Consistent average block-creation time=", allTime/uint32(toHeight), " maxTime =", maxTime)
+	fmt.Println("Test_CheckChain_Consistent txs=", allTXs, ", blockCnt=", blockCnt, " avg_txs/block =", allTXs/blockCnt)
+	fmt.Println("Test_CheckChain_Consistent txs=", allTXs)
 	//for _, cnt := range intL {
 	fmt.Println("Test_CheckChain_Consistent:", intL)
 	//}

@@ -148,6 +148,14 @@ type Log struct {
 	TransactionIndex int      `json:"transactionIndex"`
 }
 
+// TxByHashInfo output of gettxbyhash
+type TxByHashInfo struct {
+	BlockHash   string     `json:"blockHash"`
+	Height      int        `json:"blockHeight"`
+	TxIndex     int        `json:"txIndex"`
+	Transaction PoolTxInfo `json:"transaction"`
+}
+
 func accountCase(command, account, accountMix string, t *testing.T) {
 	cmd := exec.Command(CmdLight, "getbalance", "--account", account, "--address", ServerAddr)
 	var output, outputMix []byte
@@ -206,7 +214,7 @@ func getNonce(t *testing.T, command, account, serverAddr string) (int, error) {
 	}
 
 	output = bytes.Trim(output, "\n")
-	// fmt.Println(string(output))
+	//fmt.Println(string(output))
 	return strconv.Atoi(string(output))
 }
 
@@ -307,6 +315,24 @@ func getPoolCountTxs(t *testing.T, command, serverAddr string) (int64, error) {
 	tmp, err := strconv.Atoi(str)
 
 	return int64(tmp), nil
+}
+
+func GetTxByHash(t *testing.T, command, txHash, serverAddr string) (*TxByHashInfo, error) {
+	cmd := exec.Command(command, "gettxbyhash", "--hash", txHash, "--address", serverAddr)
+
+	output, errStr := cmd.CombinedOutput()
+	if errStr != nil {
+		return nil, errors.New(string(output))
+	}
+
+	//fmt.Println(string(output), errStr)
+
+	var info TxByHashInfo
+	if err := json.Unmarshal([]byte(output), &info); err != nil {
+		return nil, err
+	}
+
+	return &info, nil
 }
 
 func GetReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo, error) {
