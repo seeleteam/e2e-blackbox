@@ -97,7 +97,7 @@ func do(today string) {
 
 func Run() (all string, specified map[string]string) {
 	specified = make(map[string]string)
-	coverbyte, err := exec.Command("go", "test", "./...", "-v", " -timeout 600s", " -coverprofile="+CoverFileName).CombinedOutput()
+	coverbyte, err := exec.Command("go", "test", "./...", "-v", "-timeout", "3h", " -coverprofile="+CoverFileName).CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("cover FAIL: %s %s", err, string(coverbyte)), nil
 	}
