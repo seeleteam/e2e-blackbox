@@ -1846,7 +1846,7 @@ func Test_Client_GetBlock_ByHeight_NodeStop(t *testing.T) {
 	// Normal height
 	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStop: Node not running!")
+		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStop: error, %s", err)
 	}
 }
 
@@ -1947,7 +1947,7 @@ func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
 
 // getblock fulltx support.
 func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(CmdClient, "sendtx", "--amount", "90", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1972,6 +1972,7 @@ func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
+
 	blockHash := Gettxbyhash(txInfo.Hash)
 	cmd = exec.Command(CmdClient, "getblock", "--hash", blockHash, "--fulltx", "--address", ServerAddr)
 	if output, err := cmd.CombinedOutput(); err != nil {
@@ -2292,8 +2293,9 @@ func Test_Client_GetTxInBlock_ByHashindex(t *testing.T) {
 }
 
 func Gettxbyhash(txhash string) (blockHash string) {
-	cmd := exec.Command(CmdClient, "gettxbyhash", "--hash", "0xf8e3eac825cea8a6fed943c4c8536917d9e77a194379c8fdc14f9b460ee57beb", "--address", "127.0.0.1:8027")
-	_, err := cmd.StdinPipe()
+ErrContinue:
+	cmd := exec.Command(CmdClient, "gettxbyhash", "--hash", txhash, "--address", ServerAddr)
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -2304,15 +2306,23 @@ func Gettxbyhash(txhash string) (blockHash string) {
 	if err = cmd.Start(); err != nil {
 		return
 	}
+	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 	outStr, errStr := out.String(), outErr.String()
 	if len(string(errStr)) > 0 {
 		err = errors.New(string(errStr))
 		return
 	}
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
 	blocktxInfo := make(map[string]interface{})
 	if err = json.Unmarshal([]byte(outStr), &blocktxInfo); err != nil {
 		return
+	}
+	status := blocktxInfo["status"].(string)
+	if status == "pool" {
+		goto ErrContinue
 	}
 	blockHash = blocktxInfo["blockHash"].(string)
 	return blockHash
