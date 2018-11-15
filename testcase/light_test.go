@@ -255,18 +255,18 @@ func Test_light_SendTx_CrossShard(t *testing.T) {
 func Test_Light_TxInPool(t *testing.T) {
 	curNonce, err := getNonce(t, CmdLight, AccountShard1_3, ServerAddr)
 	if err != nil {
-		t.Fatalf("getnonce returns with error input", err)
+		t.Fatalf("getnonce returns with error input %s", err)
 	}
 	fmt.Println("nonce=", curNonce)
 	var beginBalance, dstBeginBalance int64
 	beginBalance, err = getBalance(t, CmdLight, AccountShard1_3, ServerAddr)
 	if err != nil {
-		t.Fatalf("getBalance returns with error input", err)
+		t.Fatalf("getBalance returns with error input %s", err)
 	}
 
 	dstBeginBalance, err = getBalance(t, CmdLight, Account1_Aux, ServerAddr)
 	if err != nil {
-		t.Fatalf("getBalance returns with error input", err)
+		t.Fatalf("getBalance returns with error input %s", err)
 	}
 
 	fmt.Println("fromAccount=", beginBalance, "dstAccount=", dstBeginBalance)
@@ -280,10 +280,8 @@ func Test_Light_TxInPool(t *testing.T) {
 	info, err3 := GetTxByHash(t, CmdLight, txHash, ServerAddr)
 
 	if err3 != nil {
-		//fmt.Println("GetTxByHash info=", info, "err=", err3)
-		t.Fatalf("Test_Light_SendTx: An error occured when GetTxByHash:%s %s", info, err3)
+		t.Fatalf("Test_Light_SendTx: An error occured when GetTxByHash:%v, err=%s", info, err3)
 	}
-	//fmt.Println("../bin/client gettxbyhash --hash ", txHash)
 }
 
 func Test_Light_SendManyTx(t *testing.T) {
