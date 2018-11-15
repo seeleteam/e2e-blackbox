@@ -400,7 +400,7 @@ func DeployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 	if err != nil {
 		return "", "", nil, fmt.Errorf("DeployContractAndSendTx read contract failed %s", err.Error())
 	}
-	cmd := exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_1, "--amount", "0", "--payload", string(contract), "--address", ServerAddr)
+	cmd := exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_3, "--amount", "0", "--payload", string(contract), "--address", ServerAddr)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return "", "", nil, fmt.Errorf("DeployContractAndSendTx create contract err %s", err.Error())
@@ -456,7 +456,7 @@ func DeployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 		return "", "", nil, errors.New("DeployContractAndSendTx returns false with valid parameter")
 	}
 	method = method[9 : len(method)-1]
-	cmd = exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_1, "--to", receipt.Contract,
+	cmd = exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_3, "--to", receipt.Contract,
 		"--amount", "0", "--payload", string(method), "--address", ServerAddr)
 	stdin, err = cmd.StdinPipe()
 	if err != nil {

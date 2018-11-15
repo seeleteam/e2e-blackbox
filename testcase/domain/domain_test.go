@@ -136,7 +136,7 @@ func domainInvalidRegister(t *testing.T, funcName, keyFile, passWord, price, gas
 }
 
 func domainRegister(t *testing.T, funcName, domainName string) *common.ReceiptInfo {
-	cmd := exec.Command(common.CmdClient, "domain", "register", "--from", common.KeyFileShard1_1, "--price", "15", "--gas", "200000",
+	cmd := exec.Command(common.CmdClient, "domain", "register", "--from", common.KeyFileShard1_2, "--price", "15", "--gas", "200000",
 		"--name", domainName)
 
 	stdin, err := cmd.StdinPipe()
