@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/seeleteam/e2e-blackbox/testcase"
-	"github.com/seeleteam/go-seele/common"
+	"github.com/seeleteam/e2e-blackbox/testcase/common"
+	seele "github.com/seeleteam/go-seele/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,8 +22,8 @@ const (
 )
 
 // HandleTx handle tx and return the receipt
-func HandleTx(t *testing.T, amount int, command, from, contract, payload string) (receipt *testcase.ReceiptInfo) {
-	txHash, _, err1 := testcase.SendTx(t, command, amount, 0, 0, from, contract, payload, testcase.ServerAddr)
+func HandleTx(t *testing.T, amount int, command, from, contract, payload string) (receipt *common.ReceiptInfo) {
+	txHash, _, err1 := common.SendTx(t, command, amount, 0, 0, from, contract, payload, common.ServerAddr)
 	if err1 != nil {
 		t.Fatal(err1)
 	}
@@ -32,7 +32,7 @@ func HandleTx(t *testing.T, amount int, command, from, contract, payload string)
 	for {
 		var err2 error
 		// fmt.Println("txHash:", txHash)
-		receipt, err2 = testcase.GetReceipt(t, command, txHash, testcase.ServerAddr)
+		receipt, err2 = common.GetReceipt(t, command, txHash, common.ServerAddr)
 		if err2 != nil && !strings.Contains(err2.Error(), "leveldb: not found") {
 			t.Fatal(err2)
 		}
@@ -67,7 +67,7 @@ func GeneratePayload(t *testing.T, command, abi, method string, args ...string) 
 
 // ParseBinFile parse bin
 func ParseBinFile(t *testing.T, filePath string) string {
-	if !common.FileOrFolderExists(filePath) {
+	if !seele.FileOrFolderExists(filePath) {
 		t.Fatal("bin file not found")
 	}
 	bytes, err := ioutil.ReadFile(filePath)
