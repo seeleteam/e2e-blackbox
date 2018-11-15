@@ -3,7 +3,7 @@
 *  @copyright defined in go-seele/LICENSE
  */
 
-package testcase
+package common
 
 import (
 	"bytes"
@@ -125,11 +125,11 @@ type PoolTxInfo struct {
 
 // SendTxInfo send tx
 type SendTxInfo struct {
-	nonce   int
-	hash    string
-	amount  int64
-	gasUsed int
-	bMined  bool
+	Nonce   int
+	Hash    string
+	Amount  int64
+	GasUsed int
+	BMined  bool
 }
 
 // LogByTopic contains Seele log
@@ -156,7 +156,7 @@ type TxByHashInfo struct {
 	Transaction PoolTxInfo `json:"transaction"`
 }
 
-func accountCase(command, account, accountMix string, t *testing.T) {
+func AccountCase(command, account, accountMix string, t *testing.T) {
 	cmd := exec.Command(CmdLight, "getbalance", "--account", account, "--address", ServerAddr)
 	var output, outputMix []byte
 	var err error
@@ -174,7 +174,7 @@ func accountCase(command, account, accountMix string, t *testing.T) {
 	}
 }
 
-func getBalance(t *testing.T, command, account, serverAddr string) (int64, error) {
+func GetBalance(t *testing.T, command, account, serverAddr string) (int64, error) {
 	cmd := exec.Command(command, "getbalance", "--account", account, "--address", serverAddr)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -205,7 +205,7 @@ func GetBlock(t *testing.T, command string, height int64, serverAddr string) (re
 	return
 }
 
-func getNonce(t *testing.T, command, account, serverAddr string) (int, error) {
+func GetNonce(t *testing.T, command, account, serverAddr string) (int, error) {
 	cmd := exec.Command(command, "getnonce", "--account", account, "--address", serverAddr)
 	//var curNonce int
 	output, err := cmd.CombinedOutput()
@@ -254,7 +254,8 @@ func SendTx(t *testing.T, command string, amount, nonce, gaslimit int, keystore,
 		err = errors.New(string(errStr))
 		return
 	}
-	fmt.Println("sendtx nonce=", nonce)
+
+	// fmt.Println("sendtx nonce=", nonce)
 
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
@@ -269,7 +270,7 @@ func SendTx(t *testing.T, command string, amount, nonce, gaslimit int, keystore,
 	return
 }
 
-func getPendingTxs(t *testing.T, command, serverAddr string) (infoL []PoolTxInfo, err error) {
+func GetPendingTxs(t *testing.T, command, serverAddr string) (infoL []PoolTxInfo, err error) {
 	var output []byte
 	cmd := exec.Command(command, "getpendingtxs", "--address", serverAddr)
 	if output, err = cmd.CombinedOutput(); err != nil {
@@ -278,13 +279,13 @@ func getPendingTxs(t *testing.T, command, serverAddr string) (infoL []PoolTxInfo
 	//fmt.Println("pendingtxs:", string(output))
 	var curL []PoolTxInfo
 	if err = json.Unmarshal(output, &curL); err == nil {
-		fmt.Println("getPendingTx:", curL)
+		// fmt.Println("getPendingTx:", curL)
 		infoL = curL
 	}
 	return
 }
 
-func getPoolContentTxs(t *testing.T, command, serverAddr string) (infoM map[string][]PoolTxInfo, err error) {
+func GetPoolContentTxs(t *testing.T, command, serverAddr string) (infoM map[string][]PoolTxInfo, err error) {
 	var output []byte
 	cmd := exec.Command(command, "gettxpoolcontent", "--address", serverAddr)
 	if output, err = cmd.CombinedOutput(); err != nil {
@@ -302,7 +303,7 @@ func getPoolContentTxs(t *testing.T, command, serverAddr string) (infoM map[stri
 	return
 }
 
-func getPoolCountTxs(t *testing.T, command, serverAddr string) (int64, error) {
+func GetPoolCountTxs(t *testing.T, command, serverAddr string) (int64, error) {
 	var output []byte
 	cmd := exec.Command(command, "gettxpoolcount", "--address", serverAddr)
 	output, err := cmd.CombinedOutput()
@@ -351,7 +352,7 @@ func GetReceipt(t *testing.T, command, txHash, serverAddr string) (*ReceiptInfo,
 	return &info, nil
 }
 
-func htlcDecode(t *testing.T, command, hexResult string) (*HTLCSystemInfo, error) {
+func HTLCDecode(t *testing.T, command, hexResult string) (*HTLCSystemInfo, error) {
 	var output []byte
 	cmd := exec.Command(command, "htlc", "decode", "--payload", hexResult)
 	output, err := cmd.CombinedOutput()
@@ -367,7 +368,7 @@ func htlcDecode(t *testing.T, command, hexResult string) (*HTLCSystemInfo, error
 	return &info, nil
 }
 
-func findTxHashFromPool(txHash string, infoL *[]PoolTxInfo, infoM *map[string][]PoolTxInfo) (bPending, bContentPool bool) {
+func FindTxHashFromPool(txHash string, infoL *[]PoolTxInfo, infoM *map[string][]PoolTxInfo) (bPending, bContentPool bool) {
 	if infoL != nil {
 		for _, info := range *infoL {
 			if info.Hash == txHash {
@@ -389,20 +390,20 @@ func findTxHashFromPool(txHash string, infoL *[]PoolTxInfo, infoM *map[string][]
 	return
 }
 
-// generateTime generate time
-func generateTime(minutes int64) int64 {
+// GenerateTime generate time
+func GenerateTime(minutes int64) int64 {
 	return time.Now().Unix() + minutes*60
 }
 
-func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
-	contract, err := ioutil.ReadFile("./contract/simplestorage/SimpleEvent.bin")
+func DeployContractAndSendTx(t *testing.T) (string, string, []string, error) {
+	contract, err := ioutil.ReadFile("../contract/simplestorage/SimpleEvent.bin")
 	if err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx read contract failed %s", err.Error())
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx read contract failed %s", err.Error())
 	}
 	cmd := exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_1, "--amount", "0", "--payload", string(contract), "--address", ServerAddr)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx create contract err %s", err.Error())
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx create contract err %s", err.Error())
 	}
 	defer stdin.Close()
 
@@ -413,25 +414,25 @@ func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err = cmd.Start(); err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx: An error occured: %s", err.Error())
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx: An error occured: %s", err.Error())
 	}
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 
 	output, errStr := out.String(), outErr.String()
 	if errStr != "" {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx cmd err: %s", errStr)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx cmd err: %s", errStr)
 	}
 	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
 	var txInfo TxInfo
 	if err = json.Unmarshal([]byte(str), &txInfo); err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx create contract unmarshal err: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx create contract unmarshal err: %s", err)
 	}
 	for {
 		time.Sleep(10)
-		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		number, err := GetPoolCountTxs(t, CmdClient, ServerAddr)
 		if err != nil {
-			return "", "", nil, fmt.Errorf("deployContractAndSendTx get pool count err: %s", err)
+			return "", "", nil, fmt.Errorf("DeployContractAndSendTx get pool count err: %s", err)
 		}
 
 		if number == 0 {
@@ -443,23 +444,23 @@ func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 
 	receipt, err := GetReceipt(t, CmdClient, txInfo.Hash, ServerAddr)
 	if err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx get receipt err: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx get receipt err: %s", err)
 	}
 	if receipt.Failed {
-		return "", "", nil, errors.New("deployContractAndSendTx tx operation fault")
+		return "", "", nil, errors.New("DeployContractAndSendTx tx operation fault")
 	}
 
-	cmd = exec.Command(CmdLight, "payload", "--abi", "./contract/simplestorage/SimpleEvent.abi", "--method", "get")
+	cmd = exec.Command(CmdLight, "payload", "--abi", "../contract/simplestorage/SimpleEvent.abi", "--method", "get")
 	method, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", "", nil, errors.New("deployContractAndSendTx returns false with valid parameter")
+		return "", "", nil, errors.New("DeployContractAndSendTx returns false with valid parameter")
 	}
 	method = method[9 : len(method)-1]
 	cmd = exec.Command(CmdClient, "sendtx", "--from", KeyFileShard1_1, "--to", receipt.Contract,
 		"--amount", "0", "--payload", string(method), "--address", ServerAddr)
 	stdin, err = cmd.StdinPipe()
 	if err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx call contract err: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx call contract err: %s", err)
 	}
 
 	out.Reset()
@@ -467,25 +468,25 @@ func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err = cmd.Start(); err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx: An error occured: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx: An error occured: %s", err)
 	}
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 
 	output1, errStr := out.String(), outErr.String()
 	if errStr != "" {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx cmd err: %s", errStr)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx cmd err: %s", errStr)
 	}
 	str1 := output1[strings.Index(output1, "{") : strings.LastIndex(output1, "}")+1]
 	var tx TxInfo
 	if err = json.Unmarshal([]byte(str1), &tx); err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx call contract tx unmarshal err: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx call contract tx unmarshal err: %s", err)
 	}
 	for {
 		time.Sleep(10)
-		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		number, err := GetPoolCountTxs(t, CmdClient, ServerAddr)
 		if err != nil {
-			return "", "", nil, fmt.Errorf("deployContractAndSendTx get pool count err: %s", err)
+			return "", "", nil, fmt.Errorf("DeployContractAndSendTx get pool count err: %s", err)
 		}
 
 		if number == 0 {
@@ -497,11 +498,11 @@ func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 
 	receipt1, err := GetReceipt(t, CmdClient, tx.Hash, ServerAddr)
 	if err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx get receipt err: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx get receipt err: %s", err)
 	}
 
 	if receipt1.Failed {
-		return "", "", nil, errors.New("deployContractAndSendTx tx operation fault")
+		return "", "", nil, errors.New("DeployContractAndSendTx tx operation fault")
 	}
 	var topics []string
 	for _, log := range receipt1.Logs {
@@ -510,17 +511,17 @@ func deployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 		topics = append(topics, topic)
 	}
 	if len(topics) != 1 {
-		return "", "", nil, errors.New("deployContractAndSendTx returns log number is not 1")
+		return "", "", nil, errors.New("DeployContractAndSendTx returns log number is not 1")
 	}
 	cmd = exec.Command(CmdClient, "gettxbyhash", "--hash", tx.Hash, "--address", ServerAddr)
 	result, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx: An error occured: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx: An error occured: %s", err)
 	}
 
 	var txByHash map[string]interface{}
 	if err = json.Unmarshal([]byte(result), &txByHash); err != nil {
-		return "", "", nil, fmt.Errorf("deployContractAndSendTx get tx by hash unmarshal err: %s", err)
+		return "", "", nil, fmt.Errorf("DeployContractAndSendTx get tx by hash unmarshal err: %s", err)
 	}
 	blockHeight := uint64(txByHash["blockHeight"].(float64))
 	height := strconv.FormatUint(blockHeight, 10)
