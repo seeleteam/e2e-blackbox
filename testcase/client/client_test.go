@@ -1407,13 +1407,13 @@ func Test_Client_SendTx_InvalidAccountType(t *testing.T) {
 
 	_, errStr := out.String(), outErr.String()
 
-	if !strings.Contains(errStr, " unsupported address type") {
+	if !strings.Contains(errStr, "invalid address type") {
 		t.Fatalf("Test_Client_SendTx_testcase.InvalidAccountType Err:%s", errStr)
 	}
 }
 
 func Test_Client_SendTx_InvalidAmountValue(t *testing.T) {
-	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.InvalidAccountType)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "", "--price", "1", "--from", common.KeyFileShard1_1, "--to", common.AccountShard1_2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1439,7 +1439,7 @@ func Test_Client_SendTx_InvalidAmountValue(t *testing.T) {
 }
 
 func Test_Client_SendTx_InvalidPriceValue(t *testing.T) {
-	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", common.KeyFileShard2_1, "--to", common.InvalidAccountType)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", common.KeyFileShard1_1, "--to", common.AccountShard1_2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -2030,27 +2030,27 @@ func Test_Client_GetLogs_Invalid_Topic(t *testing.T) {
 	}
 }
 
-func Test_Client_GetLogs_Invalid_Contract(t *testing.T) {
-	_, height, topics, err := common.DeployContractAndSendTx(t)
-	if err != nil {
-		t.Fatalf("Test_Client_GetLogs_Invalid_Contract err %s", err.Error())
-	}
-	errContract := "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-	for _, topic := range topics {
-		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", common.ServerAddr)
-		if result, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("Test_Client_GetLogs_Invalid_Contract: An error occured: %s", err)
-		} else {
-			var logs []common.LogByTopic
-			if err = json.Unmarshal(result, &logs); err != nil {
-				t.Fatalf("Test_Client_GetLogs_Invalid_Contract getlogs unmarshal err %s", err)
-			}
-			if len(logs) != 0 {
-				t.Fatal("Test_Client_GetLogs_Invalid_Contract returns log number is not 0")
-			}
-		}
-	}
-}
+// func Test_Client_GetLogs_Invalid_Contract(t *testing.T) {
+// 	_, height, topics, err := common.DeployContractAndSendTx(t)
+// 	if err != nil {
+// 		t.Fatalf("Test_Client_GetLogs_Invalid_Contract err %s", err.Error())
+// 	}
+// 	errContract := "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+// 	for _, topic := range topics {
+// 		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", common.ServerAddr)
+// 		if result, err := cmd.CombinedOutput(); err != nil {
+// 			t.Fatalf("Test_Client_GetLogs_Invalid_Contract: An error occured: %s", err)
+// 		} else {
+// 			var logs []common.LogByTopic
+// 			if err = json.Unmarshal(result, &logs); err != nil {
+// 				t.Fatalf("Test_Client_GetLogs_Invalid_Contract getlogs unmarshal err %s", err)
+// 			}
+// 			if len(logs) != 0 {
+// 				t.Fatal("Test_Client_GetLogs_Invalid_Contract returns log number is not 0")
+// 			}
+// 		}
+// 	}
+// }
 
 func Test_Client_GetLogs_Invalid_Length_Contract(t *testing.T) {
 	_, height, topics, err := common.DeployContractAndSendTx(t)
@@ -2116,7 +2116,13 @@ func Test_Client_GetNonce_NoParameter(t *testing.T) {
 
 func Test_Client_GetNonce_invalidParameter(t *testing.T) {
 	cmd := exec.Command(common.CmdClient, "getnonce", common.Account1_Aux, "--address", common.ServerAddr)
-	if _, err := cmd.CombinedOutput(); err == nil {
+	out, err := cmd.CombinedOutput()
+
+	if !strings.Contains(string(out), "flag is not specified for value") {
+		t.Fatal("Test_Client_GetNonce_invalidParameter failed is not ok")
+	}
+
+	if err != nil {
 		t.Fatalf("Test_Client_testcase.GetNonce_invalidParameter returns error： invalid account")
 	}
 }
@@ -2130,7 +2136,13 @@ func Test_Client_GetNonce_AccountFromOtherShard(t *testing.T) {
 
 func Test_Client_GetReceipt_ByInvalidHash0x(t *testing.T) {
 	cmd := exec.Command(common.CmdClient, "getreceipt", "0x", "--address", common.ServerAddr)
-	if _, err := cmd.CombinedOutput(); err == nil {
+
+	out, err := cmd.CombinedOutput()
+	if !strings.Contains(string(out), "flag is not specified for value") {
+		t.Fatal("Test_Client_GetReceipt_ByInvalidHash0x failed is not ok")
+	}
+
+	if err != nil {
 		t.Fatalf("Test_Client_GetReceipt_ByInvalidHash0x error: empty hex string")
 	}
 }
@@ -2163,8 +2175,15 @@ func Test_Client_GetReceipt_InvalidParameter(t *testing.T) {
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
+
 	cmd = exec.Command(common.CmdClient, "getreceipt", txInfo.Hash, "--address", common.ServerAddr)
-	if _, err := cmd.CombinedOutput(); err == nil {
+
+	output, err := cmd.CombinedOutput()
+	if !strings.Contains(string(output), "flag is not specified for value") {
+		t.Fatal("Test_Client_GetReceipt_InvalidParameter failed is not ok")
+	}
+
+	if err != nil {
 		t.Fatalf("Test_Client_GetReceipt  error ：Grammar is not correct")
 	}
 
@@ -2387,6 +2406,7 @@ func Test_Client_GettxByHash(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -2394,6 +2414,7 @@ func Test_Client_GettxByHash(t *testing.T) {
 	if err = cmd.Start(); err != nil {
 		return
 	}
+
 	io.WriteString(stdin, "123\n")
 	cmd.Wait()
 
@@ -2402,6 +2423,7 @@ func Test_Client_GettxByHash(t *testing.T) {
 		err = errors.New(string(errStr))
 		return
 	}
+
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
@@ -2409,12 +2431,20 @@ func Test_Client_GettxByHash(t *testing.T) {
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
+
 	cmd = exec.Command(common.CmdClient, "gettxbyhash", "--hash", txInfo.Hash, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GettxByHash  error ：%s", err)
 	}
+
 	cmd = exec.Command(common.CmdClient, "gettxbyhash", txInfo.Hash, "--address", common.ServerAddr)
-	if _, err := cmd.CombinedOutput(); err == nil {
+
+	output, err := cmd.CombinedOutput()
+	if !strings.Contains(string(output), "flag is not specified for value") {
+		t.Fatal("Test_Client_GettxByHash failed is not ok")
+	}
+
+	if err != nil {
 		t.Fatalf("Test_Client_GettxByHash error ： empty hex string")
 	}
 }
@@ -2457,7 +2487,7 @@ func Test_Client_GettxByHash0x(t *testing.T) {
 // 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 // 		return
 // 	}
-	
+
 // ErrContinue:
 // 	cmd = exec.Command(common.CmdClient, "getdebtbyhash", "--hash", txInfo.Hash, "--address", common.ServertwoAddr)
 // 	if _, err := cmd.CombinedOutput(); err != nil {
