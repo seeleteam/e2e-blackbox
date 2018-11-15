@@ -3,7 +3,7 @@
 *  @copyright defined in go-seele/LICENSE
  */
 
-package testcase
+package domain
 
 import (
 	"bytes"
@@ -15,61 +15,63 @@ import (
 	"testing"
 	"time"
 
-	"github.com/seeleteam/go-seele/common"
+	"github.com/seeleteam/e2e-blackbox/testcase/common"
+
+	seele "github.com/seeleteam/go-seele/common"
 )
 
 func Test_Client_Domain_register_Invalid_KeyFile(t *testing.T) {
 	validateInfo := `invalid sender key file`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_KeyFile", "KeyFileShard1_1",
+	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_KeyFile", "common.KeyFileShard1_1",
 		"123456", "15", "200000", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_register_Unmatched_keyfile_And_Pass(t *testing.T) {
 	validateInfo := `invalid sender key file`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Unmatched_keyfile_And_Pass", KeyFileShard1_1,
+	domainInvalidRegister(t, "Test_Client_Domain_register_Unmatched_keyfile_And_Pass", common.KeyFileShard1_1,
 		"123456", "15", "200000", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_register_Invalid_PriceValue(t *testing.T) {
 	validateInfo := `invalid gas price value`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_PriceValue", KeyFileShard1_1,
+	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_PriceValue", common.KeyFileShard1_1,
 		"123", "q2", "200000", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_register_Invalid_Gas(t *testing.T) {
 	validateInfo := `invalid value "qw" for flag -gas: strconv.ParseUint: parsing "qw"`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Gas", KeyFileShard1_1,
+	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Gas", common.KeyFileShard1_1,
 		"123", "15", "qw", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_register_Invalid_Nonce(t *testing.T) {
 	validateInfo := `invalid value "er" for flag -nonce: strconv.ParseUint: parsing "er": invalid syntax`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Nonce", KeyFileShard1_1,
+	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Nonce", common.KeyFileShard1_1,
 		"123", "15", "200000", "er", "game", validateInfo)
 }
 
 // Name cannot contain special characters, such as /, \, `
 // it may be a string consisting of numbers, letters, and middle lines, etc.
-func Test_Client_Domain_register_Invalid_Name(t *testing.T) {
-	validateInfo := `invalid name, only numbers, letters, and dash lines are allowed`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Name", KeyFileShard1_1,
-		"123", "15", "200000", "", "seele.game_23", validateInfo)
-}
+// func Test_Client_Domain_register_Invalid_Name(t *testing.T) {
+// 	validateInfo := `invalid name, only numbers, letters, and dash lines are allowed`
+// 	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Name", common.KeyFileShard1_1,
+// 		"123", "15", "200000", "", "seele.game_23", validateInfo)
+// }
 
 func Test_Client_Domain_register_Invalid_Name_Empty(t *testing.T) {
 	validateInfo := `name is empty`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Name_Empty", KeyFileShard1_1,
+	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Name_Empty", common.KeyFileShard1_1,
 		"123", "15", "200000", "", "", validateInfo)
 }
 
 func Test_Client_Domain_register_Invalid_Name_Exceed_Max_Length(t *testing.T) {
 	domainName := ""
-	for i := 0; i < len(common.EmptyHash)+1; i++ {
+	for i := 0; i < len(seele.EmptyHash)+1; i++ {
 		domainName += "s"
 	}
 
 	validateInfo := `name too long`
-	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Name_Exceed_Max_Length", KeyFileShard1_1,
+	domainInvalidRegister(t, "Test_Client_Domain_register_Invalid_Name_Exceed_Max_Length", common.KeyFileShard1_1,
 		"123", "15", "200000", "", domainName, validateInfo)
 }
 
@@ -99,7 +101,7 @@ func Test_Client_Domain_register_Invalid_Name_Existed(t *testing.T) {
 
 func domainInvalidRegister(t *testing.T, funcName, keyFile, passWord, price, gas, nonce, domainName, validateInfo string) {
 	if len(nonce) == 0 {
-		accountNonce, err := getNonce(t, CmdClient, AccountShard1_1, ServerAddr)
+		accountNonce, err := common.GetNonce(t, common.CmdClient, common.AccountShard1_1, common.ServerAddr)
 		if err != nil {
 			t.Fatalf("%s, err:%s", funcName, err)
 		}
@@ -107,7 +109,7 @@ func domainInvalidRegister(t *testing.T, funcName, keyFile, passWord, price, gas
 		nonce = fmt.Sprintf("%d", accountNonce)
 	}
 
-	cmd := exec.Command(CmdClient, "domain", "register", "--from", keyFile, "--price", price, "--gas", gas,
+	cmd := exec.Command(common.CmdClient, "domain", "register", "--from", keyFile, "--price", price, "--gas", gas,
 		"--nonce", nonce, "--name", domainName)
 
 	stdin, err := cmd.StdinPipe()
@@ -129,12 +131,12 @@ func domainInvalidRegister(t *testing.T, funcName, keyFile, passWord, price, gas
 
 	errStr := outErr.String()
 	if !strings.Contains(errStr, validateInfo) {
-		t.Fatalf("%s Err:%s", funcName, errStr)
+		t.Fatalf("%s get err=:%s, should be %s", funcName, errStr, validateInfo)
 	}
 }
 
-func domainRegister(t *testing.T, funcName, domainName string) *ReceiptInfo {
-	cmd := exec.Command(CmdClient, "domain", "register", "--from", KeyFileShard1_1, "--price", "15", "--gas", "200000",
+func domainRegister(t *testing.T, funcName, domainName string) *common.ReceiptInfo {
+	cmd := exec.Command(common.CmdClient, "domain", "register", "--from", common.KeyFileShard1_1, "--price", "15", "--gas", "200000",
 		"--name", domainName)
 
 	stdin, err := cmd.StdinPipe()
@@ -162,14 +164,14 @@ func domainRegister(t *testing.T, funcName, domainName string) *ReceiptInfo {
 
 	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
 
-	var tx TxInfo
+	var tx common.TxInfo
 	if err := json.Unmarshal([]byte(str), &tx); err != nil {
 		t.Fatalf("%s unmarshal register domain tx err: %s", funcName, err)
 	}
 
 	for {
 		time.Sleep(10)
-		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		number, err := common.GetPoolCountTxs(t, common.CmdClient, common.ServerAddr)
 		if err != nil {
 			t.Fatalf("%s get pool count err: %s", funcName, err)
 		}
@@ -181,7 +183,7 @@ func domainRegister(t *testing.T, funcName, domainName string) *ReceiptInfo {
 
 	time.Sleep(20)
 
-	receipt, err := GetReceipt(t, CmdClient, tx.Hash, ServerAddr)
+	receipt, err := common.GetReceipt(t, common.CmdClient, tx.Hash, common.ServerAddr)
 	if err != nil {
 		t.Fatalf("%s get receipt err: %s", funcName, err)
 	}
@@ -191,56 +193,56 @@ func domainRegister(t *testing.T, funcName, domainName string) *ReceiptInfo {
 
 func Test_Client_Domain_owner_Invalid_KeyFile(t *testing.T) {
 	validateInfo := `invalid sender key file`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_KeyFile", "KeyFileShard1_1",
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_KeyFile", "common.KeyFileShard1_1",
 		"123456", "15", "200000", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_owner_Unmatched_keyfile_And_Pass(t *testing.T) {
 	validateInfo := `invalid sender key file`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Unmatched_keyfile_And_Pass", KeyFileShard1_1,
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Unmatched_keyfile_And_Pass", common.KeyFileShard1_1,
 		"123456", "15", "200000", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_owner_Invalid_PriceValue(t *testing.T) {
 	validateInfo := `invalid gas price value`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_PriceValue", KeyFileShard1_1,
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_PriceValue", common.KeyFileShard1_1,
 		"123", "q2", "200000", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_owner_Invalid_Gas(t *testing.T) {
 	validateInfo := `invalid value "qw" for flag -gas: strconv.ParseUint: parsing "qw"`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Gas", KeyFileShard1_1,
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Gas", common.KeyFileShard1_1,
 		"123", "15", "qw", "", "game", validateInfo)
 }
 
 func Test_Client_Domain_owner_Invalid_Nonce(t *testing.T) {
 	validateInfo := `invalid value "er" for flag -nonce: strconv.ParseUint: parsing "er": invalid syntax`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Nonce", KeyFileShard1_1,
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Nonce", common.KeyFileShard1_1,
 		"123", "15", "200000", "er", "game", validateInfo)
 }
 
 // Name cannot contain special characters, such as /, \, `
 // it may be a string consisting of numbers, letters, and middle lines, etc.
-func Test_Client_Domain_owner_Invalid_Name(t *testing.T) {
-	validateInfo := `invalid name, only numbers, letters, and dash lines are allowed`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Name", KeyFileShard1_1,
-		"123", "15", "200000", "", "seele.game_23", validateInfo)
-}
+// func Test_Client_Domain_owner_Invalid_Name(t *testing.T) {
+// 	validateInfo := `invalid name, only numbers, letters, and dash lines are allowed`
+// 	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Name", common.KeyFileShard1_1,
+// 		"123", "15", "200000", "", "seele.game_23", validateInfo)
+// }
 
 func Test_Client_Domain_owner_Invalid_Name_Empty(t *testing.T) {
 	validateInfo := `name is empty`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Name_Empty", KeyFileShard1_1,
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Name_Empty", common.KeyFileShard1_1,
 		"123", "15", "200000", "", "", validateInfo)
 }
 
 func Test_Client_Domain_owner_Invalid_Name_Exceed_Max_Length(t *testing.T) {
 	domainName := ""
-	for i := 0; i < len(common.EmptyHash)+1; i++ {
+	for i := 0; i < len(seele.EmptyHash)+1; i++ {
 		domainName += "s"
 	}
 
 	validateInfo := `name too long`
-	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Name_Exceed_Max_Length", KeyFileShard1_1,
+	domainInvalidOwner(t, "Test_Client_Domain_owner_Invalid_Name_Exceed_Max_Length", common.KeyFileShard1_1,
 		"123", "15", "200000", "", domainName, validateInfo)
 }
 
@@ -269,7 +271,7 @@ func Test_Client_Domain_owner(t *testing.T) {
 
 func domainInvalidOwner(t *testing.T, funcName, keyFile, passWord, price, gas, nonce, domainName, validateInfo string) {
 	if len(nonce) == 0 {
-		accountNonce, err := getNonce(t, CmdClient, AccountShard1_1, ServerAddr)
+		accountNonce, err := common.GetNonce(t, common.CmdClient, common.AccountShard1_1, common.ServerAddr)
 		if err != nil {
 			t.Fatalf("%s, err:%s", funcName, err)
 		}
@@ -277,7 +279,7 @@ func domainInvalidOwner(t *testing.T, funcName, keyFile, passWord, price, gas, n
 		nonce = fmt.Sprintf("%d", accountNonce)
 	}
 
-	cmd := exec.Command(CmdClient, "domain", "owner", "--from", keyFile, "--price", price, "--gas", gas,
+	cmd := exec.Command(common.CmdClient, "domain", "owner", "--from", keyFile, "--price", price, "--gas", gas,
 		"--nonce", nonce, "--name", domainName)
 
 	stdin, err := cmd.StdinPipe()
@@ -299,12 +301,12 @@ func domainInvalidOwner(t *testing.T, funcName, keyFile, passWord, price, gas, n
 
 	errStr := outErr.String()
 	if !strings.Contains(errStr, validateInfo) {
-		t.Fatalf("%s Err:%s", funcName, errStr)
+		t.Fatalf("%s err:%s, should be %s", funcName, errStr, validateInfo)
 	}
 }
 
-func domainOwner(t *testing.T, funcName, domainName string) *ReceiptInfo {
-	cmd := exec.Command(CmdClient, "domain", "owner", "--from", KeyFileShard1_1, "--price", "15", "--gas", "200000",
+func domainOwner(t *testing.T, funcName, domainName string) *common.ReceiptInfo {
+	cmd := exec.Command(common.CmdClient, "domain", "owner", "--from", common.KeyFileShard1_1, "--price", "15", "--gas", "200000",
 		"--name", domainName)
 
 	stdin, err := cmd.StdinPipe()
@@ -332,14 +334,14 @@ func domainOwner(t *testing.T, funcName, domainName string) *ReceiptInfo {
 
 	str := output[strings.Index(output, "{") : strings.LastIndex(output, "}")+1]
 
-	var tx TxInfo
+	var tx common.TxInfo
 	if err := json.Unmarshal([]byte(str), &tx); err != nil {
 		t.Fatalf("%s unmarshal register domain tx err: %s", funcName, err)
 	}
 
 	for {
 		time.Sleep(10)
-		number, err := getPoolCountTxs(t, CmdClient, ServerAddr)
+		number, err := common.GetPoolCountTxs(t, common.CmdClient, common.ServerAddr)
 		if err != nil {
 			t.Fatalf("%s get pool count err: %s", funcName, err)
 		}
@@ -351,7 +353,7 @@ func domainOwner(t *testing.T, funcName, domainName string) *ReceiptInfo {
 
 	time.Sleep(20)
 
-	receipt, err := GetReceipt(t, CmdClient, tx.Hash, ServerAddr)
+	receipt, err := common.GetReceipt(t, common.CmdClient, tx.Hash, common.ServerAddr)
 	if err != nil {
 		t.Fatalf("%s get receipt err: %s", funcName, err)
 	}

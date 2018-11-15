@@ -11,6 +11,8 @@ import (
 	"os/exec"
 	"strconv"
 	"testing"
+
+	"github.com/seeleteam/e2e-blackbox/testcase/common"
 )
 
 type PeerInfo struct {
@@ -25,21 +27,21 @@ type PeerInfo struct {
 }
 
 func Test_Client_P2P_NetVersion(t *testing.T) {
-	cmd := exec.Command(CmdClient, "p2p", "netversion", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "p2p", "netversion", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_P2P_NetVersion: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Client_P2P_NetworkID(t *testing.T) {
-	cmd := exec.Command(CmdClient, "p2p", "networkid", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "p2p", "networkid", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_P2P_NetworkID: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Client_P2P_Peers(t *testing.T) {
-	cmd := exec.Command(CmdClient, "p2p", "peers", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "p2p", "peers", "--address", common.ServerAddr)
 	peers, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_P2P_Peers: An error occured: %s", err.Error())
@@ -55,14 +57,14 @@ func Test_Client_P2P_Peers(t *testing.T) {
 }
 
 func Test_Client_P2P_ProtocolVersion(t *testing.T) {
-	cmd := exec.Command(CmdClient, "p2p", "protocolversion", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "p2p", "protocolversion", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_P2P_ProtocolVersion: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Client_P2P_PeersInfo(t *testing.T) {
-	cmd := exec.Command(CmdClient, "p2p", "peersinfo", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "p2p", "peersinfo", "--address", common.ServerAddr)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_P2P_PeersInfo: An error occured: %s", err.Error())
 	} else {
@@ -74,21 +76,21 @@ func Test_Client_P2P_PeersInfo(t *testing.T) {
 }
 
 func Test_Light_P2P_NetVersion(t *testing.T) {
-	cmd := exec.Command(CmdLight, "p2p", "netversion", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdLight, "p2p", "netversion", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Light_P2P_NetVersion: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Light_P2P_NetworkID(t *testing.T) {
-	cmd := exec.Command(CmdLight, "p2p", "networkid", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdLight, "p2p", "networkid", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Light_P2P_NetworkID: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Light_P2P_Peers(t *testing.T) {
-	cmd := exec.Command(CmdLight, "p2p", "peers", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdLight, "p2p", "peers", "--address", common.ServerAddr)
 	peers, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_P2P_Peers: An error occured: %s", err.Error())
@@ -104,14 +106,14 @@ func Test_Light_P2P_Peers(t *testing.T) {
 }
 
 func Test_Light_P2P_ProtocolVersion(t *testing.T) {
-	cmd := exec.Command(CmdLight, "p2p", "protocolversion", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdLight, "p2p", "protocolversion", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Light_P2P_ProtocolVersion: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Light_P2P_PeersInfo(t *testing.T) {
-	cmd := exec.Command(CmdLight, "p2p", "peersinfo", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdLight, "p2p", "peersinfo", "--address", common.ServerAddr)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Light_P2P_PeersInfo: An error occured: %s", err.Error())
 	} else {

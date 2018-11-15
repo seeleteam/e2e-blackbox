@@ -3,7 +3,7 @@
 *  @copyright defined in go-seele/LICENSE
  */
 
-package testcase
+package client
 
 import (
 	"bytes"
@@ -20,17 +20,19 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/seeleteam/e2e-blackbox/testcase/common"
 )
 
 func Test_Client_GetInfo(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getinfo")
+	cmd := exec.Command(common.CmdClient, "getinfo")
 	res, err := cmd.CombinedOutput()
 
 	if err != nil {
 		t.Fatalf("Test_Client_GetInfo: GetInfo error, %s", err)
 	}
 
-	var r ResGetInfo
+	var r common.ResGetInfo
 	err = json.Unmarshal(res, &r)
 	if err != nil {
 		t.Fatalf("Test_Client_GetInfo: decode return result error %s", err)
@@ -42,7 +44,7 @@ func Test_Client_GetInfo(t *testing.T) {
 }
 
 func Test_Client_Key(t *testing.T) {
-	cmd := exec.Command(CmdClient, "key")
+	cmd := exec.Command(common.CmdClient, "key")
 	res, err := cmd.CombinedOutput()
 
 	if err != nil {
@@ -66,7 +68,7 @@ func Test_Client_Key(t *testing.T) {
 }
 
 func Test_Client_DumpHeap(t *testing.T) {
-	cmd := exec.Command(CmdClient, "dumpheap")
+	cmd := exec.Command(common.CmdClient, "dumpheap")
 	res, err := cmd.CombinedOutput()
 
 	if err != nil {
@@ -86,7 +88,7 @@ func Test_Client_Dumpheap_Default_Filename(t *testing.T) {
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "heap.dump\n")
 
-	cmd := exec.Command(CmdClient, "dumpheap", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "dumpheap", "--address", common.ServerAddr)
 	file, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Dumpheap_Default_Filename: An error occured: %s", err.Error())
@@ -105,7 +107,7 @@ func Test_Client_Dumpheap_Specified_Filename(t *testing.T) {
 	defaultDataFolder := filepath.Join(userPath.HomeDir, ".seele")
 	defaultFilePath := filepath.Join(defaultDataFolder, "test.dump\n")
 
-	cmd := exec.Command(CmdClient, "dumpheap", "--address", ServerAddr, "--file", "test.dump")
+	cmd := exec.Command(common.CmdClient, "dumpheap", "--address", common.ServerAddr, "--file", "test.dump")
 	file, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Dumpheap_Specified_Filename: An error occured: %s", err.Error())
@@ -117,7 +119,7 @@ func Test_Client_Dumpheap_Specified_Filename(t *testing.T) {
 }
 
 func Test_Client_Payload_ValidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "payload", "--abi", "./contract/simplestorage/SimpleStorage.abi", "--method", "set",
+	cmd := exec.Command(common.CmdClient, "payload", "--abi", "../contract/simplestorage/SimpleStorage.abi", "--method", "set",
 		"--args", "10")
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Payload_ValidParameter returns error with valid parameter %s", err.Error())
@@ -125,7 +127,7 @@ func Test_Client_Payload_ValidParameter(t *testing.T) {
 }
 
 func Test_Client_Payload_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "payload", "./contract/simplestorage/SimpleStorage.abi", "--method", "set",
+	cmd := exec.Command(common.CmdClient, "payload", "./contract/simplestorage/SimpleStorage.abi", "--method", "set",
 		"--args", "10")
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Payload_InvalidParameter returns ok with invalid parameter")
@@ -133,7 +135,7 @@ func Test_Client_Payload_InvalidParameter(t *testing.T) {
 }
 
 func Test_Client_Payload_Method_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "payload", "--abi", "./contract/simplestorage/SimpleStorage.abi", "--method", "get",
+	cmd := exec.Command(common.CmdClient, "payload", "--abi", "./contract/simplestorage/SimpleStorage.abi", "--method", "get",
 		"--args", "10")
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Payload_Method_InvalidParameter returns ok with method invalid parameter")
@@ -142,17 +144,17 @@ func Test_Client_Payload_Method_InvalidParameter(t *testing.T) {
 
 /*
 func Test_Client_Miner_Status(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_Status: An error occured: %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Stop mining returns error %s", err.Error())
 		}
-		cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 		status, err = cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("Test_Client_Miner_Status: An error occured: %s", err.Error())
@@ -161,11 +163,11 @@ func Test_Client_Miner_Status(t *testing.T) {
 			t.Fatal("Test_Client_Miner_Status returns error status")
 		}
 	} else if string(status) == "Stopped\n" {
-		cmd := exec.Command(CmdClient, "miner", "start", "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "miner", "start", "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Start mining returns error %s", err.Error())
 		}
-		cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 		status, err = cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("Test_Client_Miner_Status: An error occured: %s", err.Error())
@@ -179,58 +181,58 @@ func Test_Client_Miner_Status(t *testing.T) {
 }
 
 func Test_Client_Miner_Start_Multiply(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) != "Running\n" {
-		cmd := exec.Command(CmdClient, "miner", "start", "--threads", "3", "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "miner", "start", "--threads", "3", "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Start mining returns error %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "start", "--threads", "3", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "start", "--threads", "3", "--address", common.ServerAddr)
 	if _, err = cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Miner_Start_Multiply returns ok")
 	}
 }
 
 func Test_Client_Miner_Start_Invalid_Threads(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("stop mining failed %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "start", "--threads", "-1", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "start", "--threads", "-1", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Miner_Start_Invalid_Threads returns ok")
 	}
 }
 
 func Test_Client_Miner_Start_Valid_Threads(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("stop mining failed %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "start", "--threads", "2", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "start", "--threads", "2", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatal("Test_Client_Miner_Start_Valid_Threads returns ok")
 	}
-	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	n, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_Start_Valid_Threads: An error occured: %s", err.Error())
@@ -241,22 +243,22 @@ func Test_Client_Miner_Start_Valid_Threads(t *testing.T) {
 }
 
 func Test_Client_Miner_Start_Default_Threads(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("stop mining failed %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "start", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "start", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_Start_Default_Threads: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	threads, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_Start_Default_Threads: An error occured: %s", err.Error())
@@ -273,32 +275,32 @@ func Test_Client_Miner_Start_Default_Threads(t *testing.T) {
 }
 
 func Test_Client_Miner_Stop_Multiply(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) != "Stopped\n" {
-		cmd := exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Stop mining returns error %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 	if _, err = cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Miner_Stop_Multiply returns ok")
 	}
 }
 
 func Test_Client_Miner_Getcoinbase(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "getcoinbase", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "getcoinbase", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_Getcoinbase returns error %s", err.Error())
 	}
 }
 
 func Test_Client_Miner_Hashrate(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "hashrate", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "hashrate", "--address", common.ServerAddr)
 	result, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_Hashrate: An error occured: %s", err.Error())
@@ -314,41 +316,41 @@ func Test_Client_Miner_Hashrate(t *testing.T) {
 }
 
 func Test_Client_Miner_Setcoinbase_Valid(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", AccountShard1_1, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "setcoinbase", "--coinbase", common.AccountShard1_1, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_Setcoinbase_Valid: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "getcoinbase", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "getcoinbase", "--address", common.ServerAddr)
 	account, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get coinbase error %s", err.Error())
 	}
 	account = bytes.TrimRight(account, "\n")
-	if string(account) != AccountShard1_1 {
+	if string(account) != common.AccountShard1_1 {
 		t.Fatal("Test_Client_Miner_Setcoinbase_Valid did not set the coinbase successfully")
 	}
 
-	cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("stop mining failed %s", err.Error())
 		}
 	} else {
-		cmd = exec.Command(CmdClient, "miner", "start", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "start", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("start mining failed %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", AccountShard1_2, "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "setcoinbase", "--coinbase", AccountShard1_2, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_Setcoinbase_Valid: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "getcoinbase", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "getcoinbase", "--address", common.ServerAddr)
 	account, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get coinbase error %s", err.Error())
@@ -360,66 +362,66 @@ func Test_Client_Miner_Setcoinbase_Valid(t *testing.T) {
 }
 
 func Test_Client_Miner_Setcoinbase_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setcoinbase", AccountShard1_1, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "setcoinbase", common.AccountShard1_1, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Miner_Setcoinbase_InvalidParameter returns ok")
 	}
 }
 
 func Test_Client_Miner_Setcoinbase_InvalidAccount(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", AccountErr, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "setcoinbase", "--coinbase", common.AccountErr, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Miner_Setcoinbase_InvalidAccount return ok")
 	}
 }
 
-func Test_Client_Miner_Setcoinbase_InvalidAccountType(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", InvalidAccountType, "--address", ServerAddr)
+func Test_Client_Miner_Setcoinbase_testcase.InvalidAccountType(t *testing.T) {
+	cmd := exec.Command(common.CmdClient, "miner", "setcoinbase", "--coinbase", common.InvalidAccountType, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatal("Test_Client_Miner_Setcoinbase_InvalidAccountType return ok")
+		t.Fatal("Test_Client_Miner_Setcoinbase_testcase.InvalidAccountType return ok")
 	}
 }
 
 func Test_Client_Miner_Setcoinbase_AccountFromOtherShard(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setcoinbase", "--coinbase", AccountShard2_1, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "setcoinbase", "--coinbase", AccountShard2_1, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatal("Test_Client_Miner_Setcoinbase_AccountFromOtherShard return ok")
 	}
 }
 
 func Test_Client_Miner_Threads(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_Threads: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Get miner status returns error %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("stop mining failed %s", err.Error())
 		}
 	} else {
-		cmd = exec.Command(CmdClient, "miner", "start", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "start", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("start mining failed %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_Threads: An error occured: %s", err.Error())
 	}
 }
 
 func Test_Client_Miner_SetThreads(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setthreads", "--threads", "10", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "setthreads", "--threads", "10", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	n1, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads: An error occured: %s", err.Error())
@@ -428,27 +430,27 @@ func Test_Client_Miner_SetThreads(t *testing.T) {
 		t.Fatal("Test_Client_Miner_SetThreads did not set the threads number")
 	}
 
-	cmd = exec.Command(CmdClient, "miner", "status", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "status", "--address", common.ServerAddr)
 	status, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("get miner status returns error %s", err.Error())
 	}
 	if string(status) == "Running\n" {
-		cmd = exec.Command(CmdClient, "miner", "stop", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "stop", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("stop mining failed %s", err.Error())
 		}
 	} else {
-		cmd = exec.Command(CmdClient, "miner", "start", "--address", ServerAddr)
+		cmd = exec.Command(common.CmdClient, "miner", "start", "--address", common.ServerAddr)
 		if _, err = cmd.CombinedOutput(); err != nil {
 			t.Fatalf("start mining failed %s", err.Error())
 		}
 	}
-	cmd = exec.Command(CmdClient, "miner", "setthreads", "--threads", "5", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "setthreads", "--threads", "5", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	n2, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads: An error occured: %s", err.Error())
@@ -459,15 +461,15 @@ func Test_Client_Miner_SetThreads(t *testing.T) {
 }
 
 func Test_Client_Miner_SetThreads_Default(t *testing.T) {
-	cmd := exec.Command(CmdClient, "miner", "setthreads", "--threads", "10", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "miner", "setthreads", "--threads", "10", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads_Default: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "setthreads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "setthreads", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads_Default: An error occured: %s", err.Error())
 	}
-	cmd = exec.Command(CmdClient, "miner", "threads", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "miner", "threads", "--address", common.ServerAddr)
 	threads, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_Miner_SetThreads_Default: An error occured: %s", err.Error())
@@ -485,7 +487,7 @@ func Test_Client_Miner_SetThreads_Default(t *testing.T) {
 
 // --------------------test savekey start-------------------
 func Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "123")
+	cmd := exec.Command(common.CmdClient, "savekey", "--privatekey", "123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -503,7 +505,7 @@ func Test_Client_SaveKey_Invalid_Privatekey_Without_Prefix_0x(t *testing.T) {
 }
 
 func Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x123")
+	cmd := exec.Command(common.CmdClient, "savekey", "--privatekey", "0x123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -521,7 +523,7 @@ func Test_Client_SaveKey_Invalid_Privatekey_With_Prefix_Odd(t *testing.T) {
 }
 
 func Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "savekey", "--privatekey", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -539,7 +541,7 @@ func Test_Client_SaveKey_Invalid_Privatekey_Syntax_Characeter(t *testing.T) {
 }
 
 func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", AccountPrivateKey2, "--file", "")
+	cmd := exec.Command(common.CmdClient, "savekey", "--privatekey", common.AccountPrivateKey2, "--file", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -557,7 +559,7 @@ func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
 }
 
 func Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", "0x")
+	cmd := exec.Command(common.CmdClient, "savekey", "--privatekey", "0x")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -576,7 +578,7 @@ func Test_Client_SaveKey_Invalid_Privatekey_With_Invalid_length(t *testing.T) {
 }
 
 func Test_Client_SaveKey(t *testing.T) {
-	cmd := exec.Command(CmdClient, "savekey", "--privatekey", AccountPrivateKey2, "--file", ".test_keystore")
+	cmd := exec.Command(common.CmdClient, "savekey", "--privatekey", common.AccountPrivateKey2, "--file", ".test_keystore")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -606,7 +608,7 @@ func Test_Client_SaveKey(t *testing.T) {
 
 // --------------------test getbalance start-------------------
 func Test_Client_GetBalance_Account_Invalid_With_Prefix_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getbalance", "--account", AccountErr, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getbalance", "--account", common.AccountErr, "--address", common.ServerAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -624,7 +626,7 @@ func Test_Client_GetBalance_Account_Invalid_With_Prefix_Odd(t *testing.T) {
 }
 
 func Test_Client_GetBalance_Account_Invalid_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getbalance", "--account", "aaaaaaaaaaaaaaaaa", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getbalance", "--account", "aaaaaaaaaaaaaaaaa", "--address", common.ServerAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -642,7 +644,7 @@ func Test_Client_GetBalance_Account_Invalid_Without_Prefix_0x(t *testing.T) {
 }
 
 func Test_Client_GetBalance_Account_Invalid_Syntax_Characeter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getbalance", "--account", "0xaaaaaaaaaaaaaaaaa-", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getbalance", "--account", "0xaaaaaaaaaaaaaaaaa-", "--address", common.ServerAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -660,7 +662,7 @@ func Test_Client_GetBalance_Account_Invalid_Syntax_Characeter(t *testing.T) {
 }
 
 func Test_Client_GetBalance_Account_Invalid_empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getbalance", "--account", "", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getbalance", "--account", "", "--address", common.ServerAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -678,7 +680,7 @@ func Test_Client_GetBalance_Account_Invalid_empty(t *testing.T) {
 }
 
 func Test_Client_GetBalance_Account_Invalid_FromOtherShard(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getbalance", "--account", Account2, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getbalance", "--account", common.Account2, "--address", common.ServerAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -696,7 +698,7 @@ func Test_Client_GetBalance_Account_Invalid_FromOtherShard(t *testing.T) {
 }
 
 func Test_Client_GetBalance_Account(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getbalance", "--account", "0x0a57a2714e193b7ac50475ce625f2dcfb483d741", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getbalance", "--account", "0x0a57a2714e193b7ac50475ce625f2dcfb483d741", "--address", common.ServerAddr)
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -717,7 +719,7 @@ func Test_Client_GetBalance_Account(t *testing.T) {
 
 // --------------------test getshardnum start-------------------
 /*func Test_Client_GetShardNum_Account_Invalid_With_Invalid_Type(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--account", "0xff0fb1e59e92e94fac74febec98cfd58b956fa6d")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--account", "0xff0fb1e59e92e94fac74febec98cfd58b956fa6d")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -735,7 +737,7 @@ func Test_Client_GetBalance_Account(t *testing.T) {
 }*/
 
 func Test_Client_GetShardNum_Account_Invalid_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--account", "123")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--account", "123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -753,7 +755,7 @@ func Test_Client_GetShardNum_Account_Invalid_Without_Prefix_0x(t *testing.T) {
 }
 
 func Test_Client_GetShardNum_Account_Invalid_With_Prefix_0x_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--account", "0x123")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--account", "0x123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -771,7 +773,7 @@ func Test_Client_GetShardNum_Account_Invalid_With_Prefix_0x_Odd(t *testing.T) {
 }
 
 func Test_Client_GetShardNum_Account_Invalid_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--account", "")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--account", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -788,7 +790,7 @@ func Test_Client_GetShardNum_Account_Invalid_Empty(t *testing.T) {
 	}
 }
 func Test_Client_GetShardNum_Account_Invalid_Syntax_Character(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--account", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--account", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -806,7 +808,7 @@ func Test_Client_GetShardNum_Account_Invalid_Syntax_Character(t *testing.T) {
 }
 
 func Test_Client_GetShardNum_Account(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--account", Account2)
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--account", common.Account2)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("getshardnum error:%s", err)
 	} else {
@@ -817,7 +819,7 @@ func Test_Client_GetShardNum_Account(t *testing.T) {
 }
 
 func Test_Client_GetShardNum_PrivateKey_Invalid_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", "1234")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--privatekey", "1234")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -835,7 +837,7 @@ func Test_Client_GetShardNum_PrivateKey_Invalid_Without_Prefix_0x(t *testing.T) 
 }
 
 func Test_Client_GetShardNum_PrivateKey_Invalid_With_Prefix_0x_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", "0x123")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--privatekey", "0x123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -853,7 +855,7 @@ func Test_Client_GetShardNum_PrivateKey_Invalid_With_Prefix_0x_Odd(t *testing.T)
 }
 
 func Test_Client_GetShardNum_PrivateKey_Invalid_Syntax_Character(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--privatekey", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -871,7 +873,7 @@ func Test_Client_GetShardNum_PrivateKey_Invalid_Syntax_Character(t *testing.T) {
 }
 
 func Test_Client_GetShardNum_PrivateKey(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getshardnum", "--privatekey", AccountPrivateKey2)
+	cmd := exec.Command(common.CmdClient, "getshardnum", "--privatekey", common.AccountPrivateKey2)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetShardNum_PrivateKey,getshardnum error:%s", err)
 	} else {
@@ -885,7 +887,7 @@ func Test_Client_GetShardNum_PrivateKey(t *testing.T) {
 
 // --------------------test key start-------------------
 func Test_Client_Key_Invalid_Shard_Greater_Than_2(t *testing.T) {
-	cmd := exec.Command(CmdClient, "key", "--shard", "3")
+	cmd := exec.Command(common.CmdClient, "key", "--shard", "3")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -903,7 +905,7 @@ func Test_Client_Key_Invalid_Shard_Greater_Than_2(t *testing.T) {
 }
 
 func Test_Client_Key_Invalid_Shard_Non_Numerical(t *testing.T) {
-	cmd := exec.Command(CmdClient, "key", "--shard", "a")
+	cmd := exec.Command(common.CmdClient, "key", "--shard", "a")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -921,7 +923,7 @@ func Test_Client_Key_Invalid_Shard_Non_Numerical(t *testing.T) {
 }
 
 func Test_Client_Key_Invalid_Shard_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "key", "--shard", "")
+	cmd := exec.Command(common.CmdClient, "key", "--shard", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -942,7 +944,7 @@ func Test_Client_Key_Invalid_Shard_Empty(t *testing.T) {
 
 // --------------------test sign start-------------------
 func Test_Client_Sign_Invalid_privatekey_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", "123")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", "123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -960,7 +962,7 @@ func Test_Client_Sign_Invalid_privatekey_Without_Prefix_0x(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_privatekey_With_Prefix_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", "0x123")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", "0x123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -978,7 +980,7 @@ func Test_Client_Sign_Invalid_privatekey_With_Prefix_Odd(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_privatekey_With_Syntax_Character(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -996,7 +998,7 @@ func Test_Client_Sign_Invalid_privatekey_With_Syntax_Character(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_To_Address_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--to", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1014,7 +1016,7 @@ func Test_Client_Sign_Invalid_To_Address_Empty(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_To_Address_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "123")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--to", "123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1032,7 +1034,7 @@ func Test_Client_Sign_Invalid_To_Address_Without_Prefix_0x(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "0x123")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--to", "0x123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1050,7 +1052,7 @@ func Test_Client_Sign_Invalid_To_Address_With_Prefix_Odd(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_To_Address_With_Syntax_Character(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--to", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--to", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1061,14 +1063,14 @@ func Test_Client_Sign_Invalid_To_Address_With_Syntax_Character(t *testing.T) {
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-	fmt.Println(errStr)
+
 	if !strings.Contains(errStr, "invalid receiver address: invalid hex string") {
 		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Character,sign should return error with the to address has syntax character: %s", errStr)
 	}
 }
 
 func Test_Client_Sign_Invalid_Amount_With_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1086,7 +1088,7 @@ func Test_Client_Sign_Invalid_Amount_With_Empty(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Amount_With_Non_Numerical(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "a")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "a")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1104,7 +1106,7 @@ func Test_Client_Sign_Invalid_Amount_With_Non_Numerical(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Price_With_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1122,7 +1124,7 @@ func Test_Client_Sign_Invalid_Price_With_Empty(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Price_With_Non_Numerical(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "a")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "a")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1140,7 +1142,7 @@ func Test_Client_Sign_Invalid_Price_With_Non_Numerical(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Gaslimit_With_Non_Numerical(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "1", "--gas", "a")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "1", "--gas", "a")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1158,7 +1160,7 @@ func Test_Client_Sign_Invalid_Gaslimit_With_Non_Numerical(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Gaslimit_With_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1176,7 +1178,7 @@ func Test_Client_Sign_Invalid_Gaslimit_With_Empty(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Gaslimit_With_Non_Integer(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "17.5")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "17.5")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1194,7 +1196,7 @@ func Test_Client_Sign_Invalid_Gaslimit_With_Non_Integer(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Gaslimit_With_Negative_Integer(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "-17")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "-17")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1212,7 +1214,7 @@ func Test_Client_Sign_Invalid_Gaslimit_With_Negative_Integer(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Nonce_With_Negative_Integer(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "-1")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "-1")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1230,7 +1232,7 @@ func Test_Client_Sign_Invalid_Nonce_With_Negative_Integer(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Nonce_With_Non_Integer(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "17.5")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "17.5")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1248,7 +1250,7 @@ func Test_Client_Sign_Invalid_Nonce_With_Non_Integer(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Nonce_With_Non_Numeric(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "a")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "a")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1266,7 +1268,7 @@ func Test_Client_Sign_Invalid_Nonce_With_Non_Numeric(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Nonce_With_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1284,7 +1286,7 @@ func Test_Client_Sign_Invalid_Nonce_With_Empty(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Payload_With_Empty(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1000000000000", "--nonce", "")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1302,7 +1304,7 @@ func Test_Client_Sign_Invalid_Payload_With_Empty(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Payload_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "aaa")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "aaa")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1320,7 +1322,7 @@ func Test_Client_Sign_Invalid_Payload_Without_Prefix_0x(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Payload_With_Prefix_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "0x123")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "0x123")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1338,7 +1340,7 @@ func Test_Client_Sign_Invalid_Payload_With_Prefix_Odd(t *testing.T) {
 }
 
 func Test_Client_Sign_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sign", "--privatekey", AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "sign", "--privatekey", common.AccountPrivateKey2, "--amount", "2", "--price", "2", "--gas", "1", "--nonce", "1", "--payload", "0x12345-")
 	var out bytes.Buffer
 	var outErr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &out, &outErr
@@ -1349,7 +1351,7 @@ func Test_Client_Sign_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-	fmt.Println("error----:", errStr)
+
 	if !strings.Contains(errStr, "invalid hex string") {
 		t.Fatalf("Test_Client_Sign_Invalid_To_Address_With_Syntax_Characeter,sign should return error with the to address has syntax character: %s", errStr)
 	}
@@ -1359,7 +1361,7 @@ func Test_Client_Sign_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
 
 // --------------------test sendtx start-------------------
 func Test_Client_SendTx_InvalidAccountLength(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard1_1, "--to", "0x")
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard1_1, "--to", "0x")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1385,7 +1387,7 @@ func Test_Client_SendTx_InvalidAccountLength(t *testing.T) {
 }
 
 func Test_Client_SendTx_InvalidAccountType(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.InvalidAccountType)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1397,7 +1399,7 @@ func Test_Client_SendTx_InvalidAccountType(t *testing.T) {
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err = cmd.Start(); err != nil {
-		t.Fatalf("Test_Client_SendTx_InvalidAccountType: An error occured: %s", err)
+		t.Fatalf("Test_Client_SendTx_testcase.InvalidAccountType: An error occured: %s", err)
 	}
 
 	io.WriteString(stdin, "123\n")
@@ -1406,12 +1408,12 @@ func Test_Client_SendTx_InvalidAccountType(t *testing.T) {
 	_, errStr := out.String(), outErr.String()
 
 	if !strings.Contains(errStr, " unsupported address type") {
-		t.Fatalf("Test_Client_SendTx_InvalidAccountType Err:%s", errStr)
+		t.Fatalf("Test_Client_SendTx_testcase.InvalidAccountType Err:%s", errStr)
 	}
 }
 
 func Test_Client_SendTx_InvalidAmountValue(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "", "--price", "1", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.InvalidAccountType)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1437,7 +1439,7 @@ func Test_Client_SendTx_InvalidAmountValue(t *testing.T) {
 }
 
 func Test_Client_SendTx_InvalidPriceValue(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", common.KeyFileShard2_1, "--to", common.InvalidAccountType)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1449,7 +1451,7 @@ func Test_Client_SendTx_InvalidPriceValue(t *testing.T) {
 	cmd.Stdout, cmd.Stderr = &out, &outErr
 
 	if err = cmd.Start(); err != nil {
-		t.Fatalf("Test_Client_SendTx_InvalidAccountType: An error occured: %s", err)
+		t.Fatalf("Test_Client_SendTx_testcase.InvalidAccountType: An error occured: %s", err)
 	}
 
 	io.WriteString(stdin, "123\n")
@@ -1458,12 +1460,12 @@ func Test_Client_SendTx_InvalidPriceValue(t *testing.T) {
 	_, errStr := out.String(), outErr.String()
 
 	if !strings.Contains(errStr, "invalid gas price value") {
-		t.Fatalf("Test_Client_SendTx_InvalidAccountType Err:%s", errStr)
+		t.Fatalf("Test_Client_SendTx_testcase.InvalidAccountType Err:%s", errStr)
 	}
 }
 
 func Test_Client_SendTx_Unmatched_keyfile_And_Pass(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", InvalidAccountType)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.InvalidAccountType)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1489,7 +1491,7 @@ func Test_Client_SendTx_Unmatched_keyfile_And_Pass(t *testing.T) {
 }
 
 func Test_Client_SendTx_Invalid_Gas(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "")
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "", "--from", common.KeyFileShard2_1, "--to", common.Account2, "--gas", "")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1515,7 +1517,7 @@ func Test_Client_SendTx_Invalid_Gas(t *testing.T) {
 }
 
 func Test_Client_SendTx_Invalid_Payload_Without_Prefix_0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "-1")
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.Account2, "--gas", "1", "--payload", "-1")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1534,14 +1536,14 @@ func Test_Client_SendTx_Invalid_Payload_Without_Prefix_0x(t *testing.T) {
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-	fmt.Println("errStr=", errStr)
+
 	if !strings.Contains(errStr, "hex string without 0x prefix") {
 		t.Fatalf("Test_Client_SendTx_Invalid_Payload_Without_Prefix_0x Err:%s", errStr)
 	}
 }
 
 func Test_Client_SendTx_Invalid_Payload_With_Prefix_Odd(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "0x123")
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.Account2, "--gas", "1", "--payload", "0x123")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1560,14 +1562,14 @@ func Test_Client_SendTx_Invalid_Payload_With_Prefix_Odd(t *testing.T) {
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-	fmt.Println("errStr=", errStr)
+
 	if !strings.Contains(errStr, "hex string of odd length") {
 		t.Fatalf("Test_Client_SendTx_Invalid_Payload_With_Prefix_Odd Err:%s", errStr)
 	}
 }
 
 func Test_Client_SendTx_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "0x12345-")
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.Account2, "--gas", "1", "--payload", "0x12345-")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1586,14 +1588,14 @@ func Test_Client_SendTx_Invalid_Payload_With_Syntax_Characeter(t *testing.T) {
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-	fmt.Println("errStr=", errStr)
+
 	if !strings.Contains(errStr, "invalid hex string") {
 		t.Fatalf("Test_Client_SendTx_Invalid_Payload_With_Syntax_Characeter Err:%s", errStr)
 	}
 }
 
 func Test_Client_SendTx_Invalid_Nonce(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", KeyFileShard2_1, "--to", Account2, "--gas", "1", "--payload", "1", "--nonce", "")
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard2_1, "--to", common.Account2, "--gas", "1", "--payload", "1", "--nonce", "")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1622,7 +1624,7 @@ func Test_Client_SendTx_Invalid_Nonce(t *testing.T) {
 
 // --------------------test deckeyfile start-------------------
 func Test_Client_Deckeyfile_Invalid_Pass(t *testing.T) {
-	cmd := exec.Command(CmdClient, "deckeyfile", "--file", KeyFileShard2_1)
+	cmd := exec.Command(common.CmdClient, "deckeyfile", "--file", common.KeyFileShard2_1)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1648,7 +1650,7 @@ func Test_Client_Deckeyfile_Invalid_Pass(t *testing.T) {
 }
 
 func Test_Client_Deckeyfile_Invalid_Keyfile(t *testing.T) {
-	cmd := exec.Command(CmdClient, "deckeyfile", "--file", "../config/keyfile/shard1-0x1234567890")
+	cmd := exec.Command(common.CmdClient, "deckeyfile", "--file", "../config/keyfile/shard1-0x1234567890")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1674,7 +1676,7 @@ func Test_Client_Deckeyfile_Invalid_Keyfile(t *testing.T) {
 }
 
 func Test_Client_Deckeyfiles(t *testing.T) {
-	cmd := exec.Command(CmdClient, "deckeyfile", "--file", KeyFileShard2_1)
+	cmd := exec.Command(common.CmdClient, "deckeyfile", "--file", common.KeyFileShard2_1)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1693,7 +1695,7 @@ func Test_Client_Deckeyfiles(t *testing.T) {
 	cmd.Wait()
 
 	_, errStr := out.String(), outErr.String()
-	fmt.Println("err = ", errStr)
+
 	if errStr != "" {
 		t.Fatalf("Test_Client_Deckeyfiles Err:%s", errStr)
 	}
@@ -1701,14 +1703,14 @@ func Test_Client_Deckeyfiles(t *testing.T) {
 
 // --------------------test deckeyfile end-------------------
 func Test_Client_GetBlockHeight_NodeStop(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblockheight", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblockheight", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockHeight error, %s", err)
 	}
 }
 
 func Test_Client_GetBlockHeight_NodeStart(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblockheight", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblockheight", "--address", common.ServerAddr)
 	if res, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockHeight error, %s", err)
 	} else {
@@ -1720,42 +1722,42 @@ func Test_Client_GetBlockHeight_NodeStart(t *testing.T) {
 	}
 }
 func Test_Client_GetBlockHeight_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblockheight", "--height", "1000000000", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblockheight", "--height", "1000000000", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockHeight_InvalidParameter returns ok with invalid parameter")
 	}
 }
 
 func Test_Client_GetBlockHeight_ByInvalidHeight(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblockheight", "--height", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblockheight", "--height", "1", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockHeight_ByInvalidHeight returns error not defined: -height")
 	}
 }
 
 func Test_Client_GetBlockHeight_Parameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblockheight", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblockheight", "1", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockHeight_Parameter error, %s", err)
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByInvalidHeight(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--height", "100000000", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--height", "100000000", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHeight error parameter success?")
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByInvalidHeight0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--height", "0x", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--height", "0x", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHeight0x return error invalid value")
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByHeight_NodeStart(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--height", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--height", "1", "--address", common.ServerAddr)
 	if res, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByHeight: error, %s", err)
 	} else {
@@ -1768,28 +1770,28 @@ func Test_Client_GetBlockTXCount_ByHeight_NodeStart(t *testing.T) {
 }
 
 func Test_Client_GetBlockTXCount_DefaultParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_DefaultParameter:error, %s", err)
 	}
 }
 
 func Test_Client_GetBlockTXCount_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "1", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_InvalidParameter： error parameter success?")
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByInvalidHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", BlockHashErr, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--hash", common.BlockHashErr, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHash： error parameter success?")
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1810,33 +1812,33 @@ func Test_Client_GetBlockTXCount_ByHash(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
 	blockHash := Gettxbyhash(txInfo.Hash)
-	cmd = exec.Command(CmdClient, "getblocktxcount", "--hash", blockHash, "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "getblocktxcount", "--hash", blockHash, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByHash: getblocktxcount error, %s", err)
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByInvalidHash0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", "0x", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--hash", "0x", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Light_GetBlockTXCount_ByInvalidHash0x error parameter success?")
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByInvalidHash0x12(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", "0x12-", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--hash", "0x12-", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHash0x12： return error syntax character")
 	}
 }
 
 func Test_Client_GetBlockTXCount_ByInvalidHash123(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblocktxcount", "--hash", "123", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblocktxcount", "--hash", "123", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlockTXCount_ByInvalidHash123： return error hex string without 0x prefix")
 	}
@@ -1844,7 +1846,7 @@ func Test_Client_GetBlockTXCount_ByInvalidHash123(t *testing.T) {
 
 func Test_Client_GetBlock_ByHeight_NodeStop(t *testing.T) {
 	// Normal height
-	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblock", "--height", "1", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStop: error, %s", err)
 	}
@@ -1852,11 +1854,11 @@ func Test_Client_GetBlock_ByHeight_NodeStop(t *testing.T) {
 
 func Test_Client_GetBlock_ByHeight_NodeStart(t *testing.T) {
 	// Normal height
-	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblock", "--height", "1", "--address", common.ServerAddr)
 	if res, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart:Node to run returns error: %s", err)
 	} else {
-		var blockInfo BlockInfo
+		var blockInfo common.BlockInfo
 		if err = json.Unmarshal(res, &blockInfo); err != nil {
 			t.Fatalf("Test_Client_GetBlock_ByHeight_NodeStart: %s", err)
 		}
@@ -1871,21 +1873,21 @@ func Test_Client_GetBlock_ByHeight_NodeStart(t *testing.T) {
 
 func Test_Client_GetBlock_ByInvalidHeight(t *testing.T) {
 	// invalid height
-	cmd := exec.Command(CmdClient, "getblock", "--height", "10000000000", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblock", "--height", "10000000000", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlock_ByInvalidHeight: error parameter success?")
 	}
 }
 
 func Test_Client_GetBlock_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblock", "1", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblock", "1", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_InvalidParameter error, %s", err)
 	}
 }
 
 func Test_Client_GetBlock_ByNormalHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1906,19 +1908,19 @@ func Test_Client_GetBlock_ByNormalHash(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
 	blockHash := Gettxbyhash(txInfo.Hash)
-	cmd = exec.Command(CmdClient, "getblock", "--hash", blockHash, "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "getblock", "--hash", blockHash, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByNormalHash error, %s", err)
 	}
 }
 
 func Test_Client_GetBlock_ByInvalidHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblock", "--hash", BlockHashErr, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblock", "--hash", common.BlockHashErr, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetBlock_ByInvalidHash error parameter success?")
 	}
@@ -1926,11 +1928,11 @@ func Test_Client_GetBlock_ByInvalidHash(t *testing.T) {
 
 // getblock fulltx support.
 func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getblock", "--height", "1", "--fulltx", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getblock", "--height", "1", "--fulltx", "--address", common.ServerAddr)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByHeightFulltx error, %s", err)
 	} else {
-		var blockInfo BlockInfo
+		var blockInfo common.BlockInfo
 		if err = json.Unmarshal(output, &blockInfo); err != nil {
 			t.Fatalf("Test_Client_GetBlock_ByHeightFulltx: %s", err)
 		}
@@ -1947,7 +1949,7 @@ func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
 
 // getblock fulltx support.
 func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "90", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "90", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -1968,17 +1970,17 @@ func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
 
 	blockHash := Gettxbyhash(txInfo.Hash)
-	cmd = exec.Command(CmdClient, "getblock", "--hash", blockHash, "--fulltx", "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "getblock", "--hash", blockHash, "--fulltx", "--address", common.ServerAddr)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GetBlock_ByHashFulltx error, %s", err)
 	} else {
-		var blockInfo BlockInfo
+		var blockInfo common.BlockInfo
 		if err = json.Unmarshal(output, &blockInfo); err != nil {
 			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: %s", err)
 		}
@@ -1992,16 +1994,16 @@ func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
 }
 
 func Test_Client_GetLogs_ValidParameter(t *testing.T) {
-	contract, height, topics, err := deployContractAndSendTx(t)
+	contract, height, topics, err := common.DeployContractAndSendTx(t)
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_ValidParameter err %s", err.Error())
 	}
 	for _, topic := range topics {
-		cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", contract, "--topic", topic, "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", contract, "--topic", topic, "--address", common.ServerAddr)
 		if result, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Test_Client_GetLogs_ValidParameter: An error occured: %s", err)
 		} else {
-			var logs []LogByTopic
+			var logs []common.LogByTopic
 			if err = json.Unmarshal(result, &logs); err != nil {
 				t.Fatalf("Test_Client_GetLogs_ValidParameter getlogs unmarshal err %s", err)
 			}
@@ -2013,12 +2015,12 @@ func Test_Client_GetLogs_ValidParameter(t *testing.T) {
 }
 
 func Test_Client_GetLogs_Invalid_Topic(t *testing.T) {
-	contract, height, _, err := deployContractAndSendTx(t)
+	contract, height, _, err := common.DeployContractAndSendTx(t)
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_Invalid_Topic err %s", err.Error())
 	}
 	errTopic := "0xaaaaaa"
-	cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", contract, "--topic", errTopic, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", contract, "--topic", errTopic, "--address", common.ServerAddr)
 	a, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_Invalid_Topic: An error occured: %s", err)
@@ -2029,17 +2031,17 @@ func Test_Client_GetLogs_Invalid_Topic(t *testing.T) {
 }
 
 func Test_Client_GetLogs_Invalid_Contract(t *testing.T) {
-	_, height, topics, err := deployContractAndSendTx(t)
+	_, height, topics, err := common.DeployContractAndSendTx(t)
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_Invalid_Contract err %s", err.Error())
 	}
 	errContract := "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	for _, topic := range topics {
-		cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", common.ServerAddr)
 		if result, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("Test_Client_GetLogs_Invalid_Contract: An error occured: %s", err)
 		} else {
-			var logs []LogByTopic
+			var logs []common.LogByTopic
 			if err = json.Unmarshal(result, &logs); err != nil {
 				t.Fatalf("Test_Client_GetLogs_Invalid_Contract getlogs unmarshal err %s", err)
 			}
@@ -2051,13 +2053,13 @@ func Test_Client_GetLogs_Invalid_Contract(t *testing.T) {
 }
 
 func Test_Client_GetLogs_Invalid_Length_Contract(t *testing.T) {
-	_, height, topics, err := deployContractAndSendTx(t)
+	_, height, topics, err := common.DeployContractAndSendTx(t)
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_Invalid_Length_Contract err %s", err.Error())
 	}
 	errContract := "0xaaaaaaaaaaaaaaaaaaaaa"
 	for _, topic := range topics {
-		cmd := exec.Command(CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err == nil {
 			t.Fatalf("Test_Client_GetLogs_Invalid_Length_Contract return ok")
 		}
@@ -2065,13 +2067,13 @@ func Test_Client_GetLogs_Invalid_Length_Contract(t *testing.T) {
 }
 
 func Test_Client_GetLogs_Invalid_height(t *testing.T) {
-	contract, _, topics, err := deployContractAndSendTx(t)
+	contract, _, topics, err := common.DeployContractAndSendTx(t)
 	if err != nil {
 		t.Fatalf("Test_Client_GetLogs_Invalid_height err %s", err.Error())
 	}
 	errHeight := "1.5"
 	for _, topic := range topics {
-		cmd := exec.Command(CmdClient, "getlogs", "--height", errHeight, "--contract", contract, "--topic", topic, "--address", ServerAddr)
+		cmd := exec.Command(common.CmdClient, "getlogs", "--height", errHeight, "--contract", contract, "--topic", topic, "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err == nil {
 			t.Fatal("Test_Client_GetLogs_Invalid_height returns ok")
 		}
@@ -2079,62 +2081,62 @@ func Test_Client_GetLogs_Invalid_height(t *testing.T) {
 }
 
 func Test_Client_GetNonce_ByAccount(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getnonce", "--account", Account1_Aux, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getnonce", "--account", common.Account1_Aux, "--address", common.ServerAddr)
 	if res, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("getnonce returns with error input err: %s", err)
 	} else {
 		res = bytes.TrimRight(res, "\n")
 		nonce, _ := strconv.ParseInt(string(res), 10, 64)
 		if nonce < 0 {
-			t.Fatalf("Test_Client_GetNonce_InvalidAccount: Nonce value is not correct!")
+			t.Fatalf("Test_Client_testcase.GetNonce_InvalidAccount: Nonce value is not correct!")
 		}
 	}
 }
 
 func Test_Client_GetNonce_InvalidAccount0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getnonce", "--account", "0x", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getnonce", "--account", "0x", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_GetNonce_InvalidAccount0x returns err: %s", err)
+		t.Fatalf("Test_Client_testcase.GetNonce_InvalidAccount0x returns err: %s", err)
 	}
 }
 
 func Test_Client_GetNonce_InvalidAccount(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getnonce", "--account", AccountErr, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getnonce", "--account", common.AccountErr, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_GetNonce_InvalidAccount returns error： hex string of odd length")
+		t.Fatalf("Test_Client_testcase.GetNonce_InvalidAccount returns error： hex string of odd length")
 	}
 }
 
 func Test_Client_GetNonce_NoParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getnonce", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getnonce", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_GetNonce_NoParameter returns error： invalid account")
+		t.Fatalf("Test_Client_testcase.GetNonce_NoParameter returns error： invalid account")
 	}
 }
 
 func Test_Client_GetNonce_invalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getnonce", Account1_Aux, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getnonce", common.Account1_Aux, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_GetNonce_invalidParameter returns error： invalid account")
+		t.Fatalf("Test_Client_testcase.GetNonce_invalidParameter returns error： invalid account")
 	}
 }
 
 func Test_Client_GetNonce_AccountFromOtherShard(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getnonce", "--account", AccountShard1_1, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getnonce", "--account", common.AccountShard1_1, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("Test_Client_GetNonce_AccountFromOtherShard:getnonce returns successfully for other shard account")
+		t.Fatalf("Test_Client_testcase.GetNonce_AccountFromOtherShard:getnonce returns successfully for other shard account")
 	}
 }
 
 func Test_Client_GetReceipt_ByInvalidHash0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getreceipt", "0x", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getreceipt", "0x", "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetReceipt_ByInvalidHash0x error: empty hex string")
 	}
 }
 
 func Test_Client_GetReceipt_InvalidParameter(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -2157,61 +2159,61 @@ func Test_Client_GetReceipt_InvalidParameter(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
-	cmd = exec.Command(CmdClient, "getreceipt", txInfo.Hash, "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "getreceipt", txInfo.Hash, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GetReceipt  error ：Grammar is not correct")
 	}
 
 }
 func Test_Client_SendManyTx(t *testing.T) {
-	curNonce, err := getNonce(t, CmdClient, AccountShard1_5, ServerAddr)
+	curNonce, err := common.GetNonce(t, common.CmdClient, common.AccountShard1_5, common.ServerAddr)
 	if err != nil {
 		t.Fatalf("Test_Client_SendManyTx : getnonce returns with error input %s", err)
 	}
 
-	beginBalance, err := getBalance(t, CmdClient, AccountShard1_5, ServerAddr)
+	beginBalance, err := common.GetBalance(t, common.CmdClient, common.AccountShard1_5, common.ServerAddr)
 	if err != nil {
-		t.Fatalf("Test_Client_SendManyTx : getBalance returns with error input  %s", err)
+		t.Fatalf("Test_Client_SendManyTx : common.GetBalance returns with error input  %s", err)
 	}
 	if beginBalance == 0 {
-		t.Fatalf("Test_Client_SendManyTx : getBalance Insufficient amount of account")
+		t.Fatalf("Test_Client_SendManyTx : common.GetBalance Insufficient amount of account")
 	}
 
 	var txHash string
-	var sendTxL []*SendTxInfo
+	var sendTxL []*common.SendTxInfo
 
 	for cnt := 0; cnt < 5; cnt++ {
 		itemNonce := curNonce + 2 + cnt
-		txHash, _, err = SendTx(t, CmdClient, 100, itemNonce, 2100, KeyFileShard1_5, Account1_Aux2, "", ServerAddr)
+		txHash, _, err = common.SendTx(t, common.CmdClient, 100, itemNonce, 2100, common.KeyFileShard1_5, common.Account1_Aux2, "", common.ServerAddr)
 		if err != nil {
 			t.Fatalf("Test_Client_SendManyTx: An error occured: %s", err)
 		}
 
-		info := &SendTxInfo{
-			nonce:  itemNonce,
-			hash:   txHash,
-			bMined: false,
+		info := &common.SendTxInfo{
+			Nonce:  itemNonce,
+			Hash:   txHash,
+			BMined: false,
 		}
 		sendTxL = append(sendTxL, info)
 	}
 
 	cnt := 0
 	for {
-		pendingL, err1 := getPendingTxs(t, CmdClient, ServerAddr)
+		pendingL, err1 := common.GetPendingTxs(t, common.CmdClient, common.ServerAddr)
 		if err1 != nil {
-			t.Fatalf("Test_Client_SendManyTx : getPendingTxs err:%s", err1)
+			t.Fatalf("Test_Client_SendManyTx : common.GetPendingTxs err:%s", err1)
 		}
-		contentM, err2 := getPoolContentTxs(t, CmdClient, ServerAddr)
+		contentM, err2 := common.GetPoolContentTxs(t, common.CmdClient, common.ServerAddr)
 		if err2 != nil {
-			t.Fatalf("Test_Client_SendManyTx : getPoolContentTxs err:%s", err2)
+			t.Fatalf("Test_Client_SendManyTx : common.GetPoolContentTxs err:%s", err2)
 		}
-		_, err3 := getPoolCountTxs(t, CmdClient, ServerAddr)
+		_, err3 := common.GetPoolCountTxs(t, common.CmdClient, common.ServerAddr)
 		if err3 != nil {
-			t.Fatalf("Test_Client_SendManyTx : getPoolCountTxs err:%s", err3)
+			t.Fatalf("Test_Client_SendManyTx : common.GetPoolCountTxs err:%s", err3)
 		}
 		if len(pendingL)+len(contentM) == 0 {
 			break
@@ -2221,21 +2223,21 @@ func Test_Client_SendManyTx(t *testing.T) {
 	time.Sleep(8 * time.Second)
 	validCnt := 0
 	for _, sendTxInfo := range sendTxL {
-		info, err3 := GetReceipt(t, CmdClient, sendTxInfo.hash, ServerAddr)
+		info, err3 := common.GetReceipt(t, common.CmdClient, sendTxInfo.Hash, common.ServerAddr)
 		if err3 == nil {
-			if info.Hash != sendTxInfo.hash {
+			if info.Hash != sendTxInfo.Hash {
 				fmt.Println("Test_Client_SendManyTx :  Receipt Hash not match with tx")
 			}
 			validCnt++
-			sendTxInfo.bMined = true
+			sendTxInfo.BMined = true
 		} else {
-			fmt.Println("Test_Client_SendManyTx : getReceipt err. nonce=", sendTxInfo.nonce, err3)
+			fmt.Println("Test_Client_SendManyTx : getReceipt err. nonce=", sendTxInfo.Nonce, err3)
 		}
 	}
 }
 
 func Test_Client_GetTxInBlock_ByHeightindex(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--height", "1", "--index", "0")
+	cmd := exec.Command(common.CmdClient, "gettxinblock", "--height", "1", "--index", "0")
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHeightindex err=%s", err)
@@ -2243,7 +2245,7 @@ func Test_Client_GetTxInBlock_ByHeightindex(t *testing.T) {
 }
 
 func Test_Client_GetTxInBlock_ByHeight(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--height", "1")
+	cmd := exec.Command(common.CmdClient, "gettxinblock", "--height", "1")
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHeight err=%s", err)
@@ -2251,7 +2253,7 @@ func Test_Client_GetTxInBlock_ByHeight(t *testing.T) {
 }
 
 func Test_Client_GetTxInBlock_ByInvalidHeight(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--height", "1000000000", "--index", "0")
+	cmd := exec.Command(common.CmdClient, "gettxinblock", "--height", "1000000000", "--index", "0")
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByInvalidHeight err=leveldb: not found")
@@ -2259,7 +2261,7 @@ func Test_Client_GetTxInBlock_ByInvalidHeight(t *testing.T) {
 }
 
 func Test_Client_GetTxInBlock_ByHashindex(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -2280,12 +2282,12 @@ func Test_Client_GetTxInBlock_ByHashindex(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
 	blockHash := Gettxbyhash(txInfo.Hash)
-	cmd = exec.Command(CmdClient, "gettxinblock", "--hash", blockHash, "--index", "0")
+	cmd = exec.Command(common.CmdClient, "gettxinblock", "--hash", blockHash, "--index", "0")
 	_, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHashindex err=%s", err)
@@ -2294,7 +2296,7 @@ func Test_Client_GetTxInBlock_ByHashindex(t *testing.T) {
 
 func Gettxbyhash(txhash string) (blockHash string) {
 ErrContinue:
-	cmd := exec.Command(CmdClient, "gettxbyhash", "--hash", txhash, "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "gettxbyhash", "--hash", txhash, "--address", common.ServerAddr)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -2329,7 +2331,7 @@ ErrContinue:
 }
 
 func Test_Client_GetTxInBlock_ByHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -2350,13 +2352,13 @@ func Test_Client_GetTxInBlock_ByHash(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
 
 	blockHash := Gettxbyhash(txInfo.Hash)
-	cmd = exec.Command(CmdClient, "gettxinblock", "--hash", blockHash)
+	cmd = exec.Command(common.CmdClient, "gettxinblock", "--hash", blockHash)
 	_, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHash err=%s", err)
@@ -2364,7 +2366,7 @@ func Test_Client_GetTxInBlock_ByHash(t *testing.T) {
 }
 
 func Test_Client_GetTxInBlock_ByHashErr(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", BlockHashErr, "--index", "0")
+	cmd := exec.Command(common.CmdClient, "gettxinblock", "--hash", common.BlockHashErr, "--index", "0")
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHashErr err=leveldb: not found")
@@ -2372,7 +2374,7 @@ func Test_Client_GetTxInBlock_ByHashErr(t *testing.T) {
 }
 
 func Test_Client_GetTxInBlock_ByHash0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxinblock", "--hash", "0x", "--index", "0")
+	cmd := exec.Command(common.CmdClient, "gettxinblock", "--hash", "0x", "--index", "0")
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHash0x err=empty hex string")
@@ -2380,7 +2382,7 @@ func Test_Client_GetTxInBlock_ByHash0x(t *testing.T) {
 }
 
 func Test_Client_GettxByHash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", Account1_Aux2)
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println(err)
@@ -2403,71 +2405,74 @@ func Test_Client_GettxByHash(t *testing.T) {
 	outStr = outStr[strings.Index(outStr, "{"):]
 	outStr = strings.Trim(outStr, "\n")
 	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
+	var txInfo common.TxInfo
 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
 		return
 	}
-	cmd = exec.Command(CmdClient, "gettxbyhash", "--hash", txInfo.Hash, "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "gettxbyhash", "--hash", txInfo.Hash, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("Test_Client_GettxByHash  error ：%s", err)
 	}
-	cmd = exec.Command(CmdClient, "gettxbyhash", txInfo.Hash, "--address", ServerAddr)
+	cmd = exec.Command(common.CmdClient, "gettxbyhash", txInfo.Hash, "--address", common.ServerAddr)
 	if _, err := cmd.CombinedOutput(); err == nil {
 		t.Fatalf("Test_Client_GettxByHash error ： empty hex string")
 	}
 }
 
 func Test_Client_GettxByHash0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "gettxbyhash", "--hash", "0x", "--index", "0")
+	cmd := exec.Command(common.CmdClient, "gettxbyhash", "--hash", "0x", "--index", "0")
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_GetTxInBlock_ByHash0x err=empty hex string")
 	}
 }
 
-func Test_Client_Getdebtbyhash(t *testing.T) {
-	cmd := exec.Command(CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", KeyFileShard1_5, "--to", AccountShard2_2)
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		fmt.Println(err)
-	}
+// func Test_Client_Getdebtbyhash(t *testing.T) {
+// 	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.AccountShard2_2)
+// 	stdin, err := cmd.StdinPipe()
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
 
-	var out bytes.Buffer
-	var outErr bytes.Buffer
-	cmd.Stdout, cmd.Stderr = &out, &outErr
-	if err = cmd.Start(); err != nil {
-		return
-	}
-	io.WriteString(stdin, "123\n")
-	cmd.Wait()
-	outStr, errStr := out.String(), outErr.String()
-	if len(string(errStr)) > 0 {
-		err = errors.New(string(errStr))
-		return
-	}
-	outStr = outStr[strings.Index(outStr, "It is a cross shard transaction, its debt is:"):]
-	outStr = outStr[strings.Index(outStr, "{"):]
-	outStr = strings.Trim(outStr, "\n")
-	outStr = strings.Trim(outStr, " ")
-	var txInfo TxInfo
-	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
-		return
-	}
-ErrContinue:
-	cmd = exec.Command(CmdClient, "getdebtbyhash", "--hash", txInfo.Hash, "--address", ServertwoAddr)
-	if _, err := cmd.CombinedOutput(); err != nil {
-		goto ErrContinue
-		t.Fatalf("Test_Client_Getdebtbyhash  error ：%s", err)
-	}
+// 	var out bytes.Buffer
+// 	var outErr bytes.Buffer
+// 	cmd.Stdout, cmd.Stderr = &out, &outErr
+// 	if err = cmd.Start(); err != nil {
+// 		return
+// 	}
 
-	cmd = exec.Command(CmdClient, "getdebtbyhash", txInfo.Hash, "--address", ServertwoAddr)
-	if _, err := cmd.CombinedOutput(); err == nil {
-		t.Fatalf("Test_Client_Getdebtbyhash  error ：empty hex string")
-	}
-}
+// 	io.WriteString(stdin, "123\n")
+// 	cmd.Wait()
+// 	outStr, errStr := out.String(), outErr.String()
+// 	if len(string(errStr)) > 0 {
+// 		err = errors.New(string(errStr))
+// 		return
+// 	}
+
+// 	outStr = outStr[strings.Index(outStr, "It is a cross shard transaction, its debt is:"):]
+// 	outStr = outStr[strings.Index(outStr, "{"):]
+// 	outStr = strings.Trim(outStr, "\n")
+// 	outStr = strings.Trim(outStr, " ")
+// 	var txInfo common.TxInfo
+// 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+// 		return
+// 	}
+	
+// ErrContinue:
+// 	cmd = exec.Command(common.CmdClient, "getdebtbyhash", "--hash", txInfo.Hash, "--address", common.ServertwoAddr)
+// 	if _, err := cmd.CombinedOutput(); err != nil {
+// 		goto ErrContinue
+// 		t.Fatalf("Test_Client_Getdebtbyhash  error ：%s", err)
+// 	}
+
+// 	cmd = exec.Command(common.CmdClient, "getdebtbyhash", txInfo.Hash, "--address", common.ServertwoAddr)
+// 	if _, err := cmd.CombinedOutput(); err == nil {
+// 		t.Fatalf("Test_Client_Getdebtbyhash  error ：empty hex string")
+// 	}
+// }
 
 func Test_Client_Getdebtbyhash0x(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getdebtbyhash", "--hash", "0x")
+	cmd := exec.Command(common.CmdClient, "getdebtbyhash", "--hash", "0x")
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_Getdebtbyhash0x err=empty hex string")
@@ -2475,7 +2480,7 @@ func Test_Client_Getdebtbyhash0x(t *testing.T) {
 }
 
 func Test_Client_GetdebtbyhashAddr(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getdebtbyhash", "--hash", "0x", "--address", ServerAddr)
+	cmd := exec.Command(common.CmdClient, "getdebtbyhash", "--hash", "0x", "--address", common.ServerAddr)
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
@@ -2483,7 +2488,7 @@ func Test_Client_GetdebtbyhashAddr(t *testing.T) {
 }
 
 func Test_Client_GetdebtbyhashtwoAddr(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getdebtbyhash", "--hash", "0x", "--address", ServertwoAddr)
+	cmd := exec.Command(common.CmdClient, "getdebtbyhash", "--hash", "0x", "--address", common.ServertwoAddr)
 	_, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
@@ -2491,7 +2496,7 @@ func Test_Client_GetdebtbyhashtwoAddr(t *testing.T) {
 }
 
 func Test_Client_Getdebts(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getdebts")
+	cmd := exec.Command(common.CmdClient, "getdebts")
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")
@@ -2499,7 +2504,7 @@ func Test_Client_Getdebts(t *testing.T) {
 }
 
 func Test_Client_GetdebtstwoAddr(t *testing.T) {
-	cmd := exec.Command(CmdClient, "getdebts", "--address", ServertwoAddr)
+	cmd := exec.Command(common.CmdClient, "getdebts", "--address", common.ServertwoAddr)
 	_, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Test_Client_GetdebtbyhashAddr err=empty hex string")

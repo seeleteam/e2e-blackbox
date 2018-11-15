@@ -1,0 +1,50 @@
+{
+	"log": {
+		"isDebug": false,
+		"printLog": true
+	},
+	"basic": {
+		"name": "testsubchaintemplateconfig",
+		"version": "1.0",
+		"dataDir": "testsubchaintemplateconfig",
+		"address": "0.0.0.0:8127",
+		"coinbase": "0x4c10f2cd2159bb432094e3be7e17904c2b4aeb21",
+		"algorithm": "sha256"
+	},
+	"p2p": {
+		"address": "0.0.0.0:8157",
+		"networkID": "testsubchaintemplateconfig.1.seele",
+		"staticNodes": [],
+		"privateKey": "0x2578b9e6a387eb33a9554de13a58c2c724ddb33481cdbf97be30f442cf3c7fde"
+	},
+	"httpServer": {
+		"address": "127.0.0.1:8136",
+		"crossorigins": [
+			"*"
+		],
+		"whiteHost": [
+			"*"
+		]
+	},
+	"wsserver": {
+		"address": "127.0.0.1:8146",
+		"crossorigins": [
+			"*"
+		]
+	},
+	"ipcconfig": {
+		"name": ""
+	},
+	"metrics": {
+		"address": "127.0.0.1:8187",
+		"database": "influxdb",
+		"username": "test",
+		"password": "test123",
+		"duration": 10
+	},
+	"genesis": {
+		"difficult": 8000000,
+		"shard": 1,
+		"timestamp": 1542274661
+	}
+}
