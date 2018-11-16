@@ -15,19 +15,19 @@ var (
 	binFile = "./SimpleStorage.bin"
 )
 
-func Test_DeployAndCallContract_client(t *testing.T) {
-	// deploy contract
-	receipt := contract.HandleTx(t, 0, contract.CmdClient, contract.KeyFileShard11, "", contract.ParseBinFile(t, binFile))
-	// fmt.Println("receipt:", receipt)
-	callSimpleStorage(t, contract.CmdClient, contract.KeyFileShard11, receipt.Contract)
-}
+// func Test_DeployAndCallContract_client(t *testing.T) {
+// 	// deploy contract
+// 	receipt := contract.HandleTx(t, 0, contract.CmdClient, contract.KeyFileShard11, "", contract.ParseBinFile(t, binFile))
+// 	// fmt.Println("receipt:", receipt)
+// 	callSimpleStorage(t, contract.CmdClient, contract.KeyFileShard11, receipt.Contract)
+// }
 
-func Test_DeployAndCallContract_light(t *testing.T) {
-	// deploy contract
-	receipt := contract.HandleTx(t, 0, contract.CmdLight, contract.KeyFileShard12, "", contract.ParseBinFile(t, binFile))
-	// fmt.Println("receipt:", receipt)
-	callSimpleStorage(t, contract.CmdLight, contract.KeyFileShard12, receipt.Contract)
-}
+// func Test_DeployAndCallContract_light(t *testing.T) {
+// 	// deploy contract
+// 	receipt := contract.HandleTx(t, 0, contract.CmdLight, contract.KeyFileShard12, "", contract.ParseBinFile(t, binFile))
+// 	// fmt.Println("receipt:", receipt)
+// 	callSimpleStorage(t, contract.CmdLight, contract.KeyFileShard12, receipt.Contract)
+// }
 
 func callSimpleStorage(t *testing.T, command, from, contractAddr string) {
 	if !common.FileOrFolderExists(abiFile) {

@@ -1948,50 +1948,50 @@ func Test_Client_GetBlock_ByHeightFulltx(t *testing.T) {
 }
 
 // getblock fulltx support.
-func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
-	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "90", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		fmt.Println(err)
-	}
-	var out bytes.Buffer
-	var outErr bytes.Buffer
-	cmd.Stdout, cmd.Stderr = &out, &outErr
-	if err = cmd.Start(); err != nil {
-		return
-	}
-	io.WriteString(stdin, "123\n")
-	cmd.Wait()
-	outStr, errStr := out.String(), outErr.String()
-	if len(string(errStr)) > 0 {
-		err = errors.New(string(errStr))
-		return
-	}
-	outStr = outStr[strings.Index(outStr, "{"):]
-	outStr = strings.Trim(outStr, "\n")
-	outStr = strings.Trim(outStr, " ")
-	var txInfo common.TxInfo
-	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
-		return
-	}
+// func Test_Client_GetBlock_ByHashFulltx(t *testing.T) {
+// 	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "90", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.Account1_Aux2)
+// 	stdin, err := cmd.StdinPipe()
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	var out bytes.Buffer
+// 	var outErr bytes.Buffer
+// 	cmd.Stdout, cmd.Stderr = &out, &outErr
+// 	if err = cmd.Start(); err != nil {
+// 		return
+// 	}
+// 	io.WriteString(stdin, "123\n")
+// 	cmd.Wait()
+// 	outStr, errStr := out.String(), outErr.String()
+// 	if len(string(errStr)) > 0 {
+// 		err = errors.New(string(errStr))
+// 		return
+// 	}
+// 	outStr = outStr[strings.Index(outStr, "{"):]
+// 	outStr = strings.Trim(outStr, "\n")
+// 	outStr = strings.Trim(outStr, " ")
+// 	var txInfo common.TxInfo
+// 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+// 		return
+// 	}
 
-	blockHash := Gettxbyhash(txInfo.Hash)
-	cmd = exec.Command(common.CmdClient, "getblock", "--hash", blockHash, "--fulltx", "--address", common.ServerAddr)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("Test_Client_GetBlock_ByHashFulltx error, %s", err)
-	} else {
-		var blockInfo common.BlockInfo
-		if err = json.Unmarshal(output, &blockInfo); err != nil {
-			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: %s", err)
-		}
-		if blockInfo.Hash != blockHash {
-			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: Expect the return value is not correct!")
-		}
-		if len(blockInfo.Transactions) <= 0 {
-			t.Fatalf("Test_Client_GetBlock_ByHashFulltx, hash should contain one transaction at lease")
-		}
-	}
-}
+// 	blockHash := Gettxbyhash(txInfo.Hash)
+// 	cmd = exec.Command(common.CmdClient, "getblock", "--hash", blockHash, "--fulltx", "--address", common.ServerAddr)
+// 	if output, err := cmd.CombinedOutput(); err != nil {
+// 		t.Fatalf("Test_Client_GetBlock_ByHashFulltx error, %s", err)
+// 	} else {
+// 		var blockInfo common.BlockInfo
+// 		if err = json.Unmarshal(output, &blockInfo); err != nil {
+// 			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: %s", err)
+// 		}
+// 		if blockInfo.Hash != blockHash {
+// 			t.Fatalf("Test_Client_GetBlock_ByHashFulltx: Expect the return value is not correct!")
+// 		}
+// 		if len(blockInfo.Transactions) <= 0 {
+// 			t.Fatalf("Test_Client_GetBlock_ByHashFulltx, hash should contain one transaction at lease")
+// 		}
+// 	}
+// }
 
 // func Test_Client_GetLogs_ValidParameter(t *testing.T) {
 // 	contract, height, topics, err := common.DeployContractAndSendTx(t)
