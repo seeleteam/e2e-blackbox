@@ -408,101 +408,101 @@ func test_Light_SendManyTx(t *testing.T) {
 	}
 }
 
-func Test_Light_GetReceipt_old(t *testing.T) {
-	curNonce, err := common.GetNonce(t, common.CmdLight, common.AccountShard1_5, common.ServerAddr)
-	if err != nil {
-		t.Fatalf("getnonce returns with error input err: %s", err)
-	}
+// func Test_Light_GetReceipt_old(t *testing.T) {
+// 	curNonce, err := common.GetNonce(t, common.CmdLight, common.AccountShard1_5, common.ServerAddr)
+// 	if err != nil {
+// 		t.Fatalf("getnonce returns with error input err: %s", err)
+// 	}
 
-	var beginBalance, dstBeginBalance int64
-	beginBalance, err = common.GetBalance(t, common.CmdLight, common.AccountShard1_5, common.ServerAddr)
-	if err != nil {
-		t.Fatalf("common.GetBalance returns with error input err: %s", err)
-	}
+// 	var beginBalance, dstBeginBalance int64
+// 	beginBalance, err = common.GetBalance(t, common.CmdLight, common.AccountShard1_5, common.ServerAddr)
+// 	if err != nil {
+// 		t.Fatalf("common.GetBalance returns with error input err: %s", err)
+// 	}
 
-	dstBeginBalance, err = common.GetBalance(t, common.CmdLight, common.Account1_Aux2, common.ServerAddr)
-	if err != nil {
-		t.Fatalf("common.GetBalance returns with error input err: %s", err)
-	}
+// 	dstBeginBalance, err = common.GetBalance(t, common.CmdLight, common.Account1_Aux2, common.ServerAddr)
+// 	if err != nil {
+// 		t.Fatalf("common.GetBalance returns with error input err: %s", err)
+// 	}
 
-	fmt.Println("account1=", beginBalance, "dstAccount=", dstBeginBalance)
-	var txHash string
-	var sendTxL []*common.SendTxInfo
+// 	fmt.Println("account1=", beginBalance, "dstAccount=", dstBeginBalance)
+// 	var txHash string
+// 	var sendTxL []*common.SendTxInfo
 
-	for cnt := 0; cnt < 100; cnt++ {
-		itemNonce := curNonce + 2 + cnt
-		txHash, _, err = common.SendTx(t, common.CmdLight, 10000, itemNonce, 21000, common.KeyFileShard1_5, common.Account1_Aux2, "", common.ServerAddr)
-		if err != nil {
-			t.Fatalf("Test_Light_SendTx: An error occured: %s", err)
-		}
-		info := &common.SendTxInfo{
-			Nonce:  itemNonce,
-			Hash:   txHash,
-			BMined: false,
-		}
-		sendTxL = append(sendTxL, info)
-		//time.Sleep(8 * time.Second)
-	}
+// 	for cnt := 0; cnt < 100; cnt++ {
+// 		itemNonce := curNonce + 2 + cnt
+// 		txHash, _, err = common.SendTx(t, common.CmdLight, 10000, itemNonce, 21000, common.KeyFileShard1_5, common.Account1_Aux2, "", common.ServerAddr)
+// 		if err != nil {
+// 			t.Fatalf("Test_Light_SendTx: An error occured: %s", err)
+// 		}
+// 		info := &common.SendTxInfo{
+// 			Nonce:  itemNonce,
+// 			Hash:   txHash,
+// 			BMined: false,
+// 		}
+// 		sendTxL = append(sendTxL, info)
+// 		//time.Sleep(8 * time.Second)
+// 	}
 
-	for {
-		pendingL, err1 := common.GetPendingTxs(t, common.CmdLight, common.ServerAddr)
-		if err1 != nil {
-			t.Fatalf("common.GetPendingTxs err:%s", err1)
-		}
-		contentM, err2 := common.GetPoolContentTxs(t, common.CmdLight, common.ServerAddr)
-		if err2 != nil {
-			t.Fatalf("common.GetPoolContentTxs err:%s", err1)
-		}
+// 	for {
+// 		pendingL, err1 := common.GetPendingTxs(t, common.CmdLight, common.ServerAddr)
+// 		if err1 != nil {
+// 			t.Fatalf("common.GetPendingTxs err:%s", err1)
+// 		}
+// 		contentM, err2 := common.GetPoolContentTxs(t, common.CmdLight, common.ServerAddr)
+// 		if err2 != nil {
+// 			t.Fatalf("common.GetPoolContentTxs err:%s", err1)
+// 		}
 
-		bAllMined := true
-		for _, sendTxInfo := range sendTxL {
-			if sendTxInfo.BMined {
-				continue
-			}
+// 		bAllMined := true
+// 		for _, sendTxInfo := range sendTxL {
+// 			if sendTxInfo.BMined {
+// 				continue
+// 			}
 
-			bPending, bContent := common.FindTxHashFromPool(sendTxInfo.Hash, &pendingL, &contentM)
-			if bPending || bContent {
-				bAllMined = false
-				continue
-			}
+// 			bPending, bContent := common.FindTxHashFromPool(sendTxInfo.Hash, &pendingL, &contentM)
+// 			if bPending || bContent {
+// 				bAllMined = false
+// 				continue
+// 			}
 
-			//
-			//var receiptInfo *ReceiptInfo
-			_, err3 := common.GetReceipt(t, common.CmdLight, sendTxInfo.Hash, common.ServerAddr)
-			if err3 == nil {
-				//t.Fatalf("getReceipt err:%s", err3)
-				sendTxInfo.BMined = true
-			} else {
-				bAllMined = false
-			}
+// 			//
+// 			//var receiptInfo *ReceiptInfo
+// 			_, err3 := common.GetReceipt(t, common.CmdLight, sendTxInfo.Hash, common.ServerAddr)
+// 			if err3 == nil {
+// 				//t.Fatalf("getReceipt err:%s", err3)
+// 				sendTxInfo.BMined = true
+// 			} else {
+// 				bAllMined = false
+// 			}
 
-			//sendTxInfo.amount = receiptInfo.
-		}
+// 			//sendTxInfo.amount = receiptInfo.
+// 		}
 
-		if bAllMined {
-			break
-		}
-		time.Sleep(5 * time.Second)
-	}
+// 		if bAllMined {
+// 			break
+// 		}
+// 		time.Sleep(5 * time.Second)
+// 	}
 
-	var endBalance, dstEndBalance int64
-	endBalance, err = common.GetBalance(t, common.CmdLight, common.AccountShard1_5, common.ServerAddr)
-	if err != nil {
-		t.Fatalf("common.GetBalance returns with error input err: %s", err)
-	}
+// 	var endBalance, dstEndBalance int64
+// 	endBalance, err = common.GetBalance(t, common.CmdLight, common.AccountShard1_5, common.ServerAddr)
+// 	if err != nil {
+// 		t.Fatalf("common.GetBalance returns with error input err: %s", err)
+// 	}
 
-	dstEndBalance, err = common.GetBalance(t, common.CmdLight, common.Account1_Aux2, common.ServerAddr)
-	if err != nil {
-		t.Fatalf("common.GetBalance returns with error input err: %s", err)
-	}
+// 	dstEndBalance, err = common.GetBalance(t, common.CmdLight, common.Account1_Aux2, common.ServerAddr)
+// 	if err != nil {
+// 		t.Fatalf("common.GetBalance returns with error input err: %s", err)
+// 	}
 
-	fmt.Println("account1=", endBalance, "dstAccount=", dstEndBalance)
-	fmt.Println("diff account1=", beginBalance-endBalance, "dstAccount=", dstEndBalance-dstBeginBalance)
+// 	fmt.Println("account1=", endBalance, "dstAccount=", dstEndBalance)
+// 	fmt.Println("diff account1=", beginBalance-endBalance, "dstAccount=", dstEndBalance-dstBeginBalance)
 
-	// for _, sendTxInfo := range sendTxL {
-	// 	fmt.Println("./client gettxbyhash --hash ", sendTxInfo.Hash)
-	// }
-}
+// 	// for _, sendTxInfo := range sendTxL {
+// 	// 	fmt.Println("./client gettxbyhash --hash ", sendTxInfo.Hash)
+// 	// }
+// }
 
 func Test_Light_SendTx_InvalidAccountLength(t *testing.T) {
 	cmd := exec.Command(common.CmdLight, "sendtx", "--amount", "10000", "--price", "1", "--from", common.KeyFileShard1_1, "--to", "0x")
