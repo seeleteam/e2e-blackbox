@@ -26,7 +26,7 @@ var (
 const (
 	Path          = "github.com/seeleteam/go-seele/e2e-blackbox"
 	CoverFileName = "seele_coverage_detail"
-	CoverPackage  = "common\t,core\t,trie\t,p2p\t,seele\t"
+	CoverPackage  = "common\t,core\t,trie\t,p2p\t,seele\t,client\t,contract\t,domain\t,HTLC\t,light\t,network\t,subchain\t,transfer\t"
 
 	Subject    = "Daily Blackbox E2E Test Report"
 	Sender     = "send@email.com"
@@ -54,7 +54,7 @@ func main() {
 }
 
 func sendEmail(message string, attachFile []string) {
-	fmt.Println(message, attachFile)
+	// fmt.Println(message, attachFile)
 	msg := email.NewMessage(Subject, message)
 	msg.From, msg.To = mail.Address{Name: SenderName, Address: Sender}, strings.Split(Receivers, ";")
 	for _, filePath := range attachFile {
@@ -86,7 +86,7 @@ func do(today string) {
 		message += "😦 😦 😦 discover bug!\n\n"
 	} else {
 		message += "😁 Good day with no error~\n\n"
-		attachFile = append(attachFile, CoverFileName+".html")
+		// attachFile = append(attachFile, CoverFileName+".html")
 	}
 
 	// message += PrintSpecifiedPkg(yesterday, specified)
@@ -99,7 +99,8 @@ func do(today string) {
 func Run() (all string, specified map[string]string) {
 	specified = make(map[string]string)
 
-	coverbyte, err := exec.Command("go", "test", "./...", "-v", "-timeout", "3h", " -coverprofile="+CoverFileName).CombinedOutput()
+	// coverbyte, err := exec.Command("go", "test", "./...", "-v", "-timeout", "3h", "-coverprofile="+CoverFileName).CombinedOutput()
+	coverbyte, err := exec.Command("go", "test", "./...", "-v", "-timeout", "3h").CombinedOutput()
 	if err != nil {
 		return fmt.Sprintf("cover FAIL: %s %s", err, string(coverbyte)), nil
 	}
@@ -120,14 +121,16 @@ func Run() (all string, specified map[string]string) {
 
 		all += out + "\n"
 	}
+
 	// go tool cover -html=covprofile -o coverage.html
-	if err := exec.Command("go", "tool", "cover", "-html="+CoverFileName, "-o", CoverFileName+".html").Run(); err != nil {
-		return fmt.Sprintf("tool cover FAIL: %s", err), nil
-	}
+	// if err := exec.Command("go", "tool", "cover", "-html="+CoverFileName, "-o", CoverFileName+".html").Run(); err != nil {
+	// 	return fmt.Sprintf("tool cover FAIL: %s", err), nil
+	// }
 
 	return all, specified
 }
 
+// PrintSpecifiedPkg print pkg
 func PrintSpecifiedPkg(yestoday string, specified map[string]string) string {
 	result := "\n============= Change in coverage of major packages compared to yesterday ===============\n\n"
 	yestodaySpec := make(map[string]string)
