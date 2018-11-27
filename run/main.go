@@ -32,9 +32,9 @@ const (
 	Sender     = "send@email.com"
 	Password   = "password"
 	SenderName = "reporter"
-
-	Receivers = "receiver@email.com"
-	Host      = "smtp.exmail.qq.com:25"
+	CC         = "CC@email.com"
+	Receivers  = "receiver@email.com"
+	Host       = "smtp.exmail.qq.com:25"
 
 	StartHour = 04
 	StartMin  = 00
@@ -57,6 +57,7 @@ func sendEmail(message string, attachFile []string) {
 	// fmt.Println(message, attachFile)
 	msg := email.NewMessage(Subject, message)
 	msg.From, msg.To = mail.Address{Name: SenderName, Address: Sender}, strings.Split(Receivers, ";")
+	msg.Cc = strings.Split(CC, ";")
 	for _, filePath := range attachFile {
 		if err := msg.Attach(filePath); err != nil {
 			fmt.Printf("failed to add attach file. path: %s, err: %s\n", filePath, err)
