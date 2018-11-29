@@ -2457,49 +2457,61 @@ func Test_Client_GettxByHash0x(t *testing.T) {
 	}
 }
 
-// func Test_Client_Getdebtbyhash(t *testing.T) {
-// 	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "900", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_5, "--to", common.AccountShard2_2)
-// 	stdin, err := cmd.StdinPipe()
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
+func Test_Client_Getdebtbyhash(t *testing.T) {
+	cmd := exec.Command(common.CmdClient, "sendtx", "--amount", "101", "--price", "1", "--gas", "2", "--from", common.KeyFileShard1_1, "--to", common.AccountShard2_2)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		fmt.Println(err)
+	}
 
-// 	var out bytes.Buffer
-// 	var outErr bytes.Buffer
-// 	cmd.Stdout, cmd.Stderr = &out, &outErr
-// 	if err = cmd.Start(); err != nil {
-// 		return
-// 	}
+	var out bytes.Buffer
+	var outErr bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &out, &outErr
+	if err = cmd.Start(); err != nil {
+		return
+	}
 
-// 	io.WriteString(stdin, "123\n")
-// 	cmd.Wait()
-// 	outStr, errStr := out.String(), outErr.String()
-// 	if len(string(errStr)) > 0 {
-// 		err = errors.New(string(errStr))
-// 		return
-// 	}
+	io.WriteString(stdin, "123\n")
+	cmd.Wait()
+	outStr, errStr := out.String(), outErr.String()
+	if len(string(errStr)) > 0 {
+		err = errors.New(string(errStr))
+		return
+	}
 
-// 	outStr = outStr[strings.Index(outStr, "It is a cross shard transaction, its debt is:"):]
-// 	outStr = outStr[strings.Index(outStr, "{"):]
-// 	outStr = strings.Trim(outStr, "\n")
-// 	outStr = strings.Trim(outStr, " ")
-// 	var txInfo common.TxInfo
-// 	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
-// 		return
-// 	}
+	outStr = outStr[strings.Index(outStr, "It is a cross shard transaction, its debt is:"):]
+	outStr = outStr[strings.Index(outStr, "{"):]
+	outStr = strings.Trim(outStr, "\n")
+	outStr = strings.Trim(outStr, " ")
+	var txInfo common.TxInfo
 
-// ErrContinue:
-// 	cmd = exec.Command(common.CmdClient, "getdebtbyhash", "--hash", txInfo.Hash, "--address", common.ServertwoAddr)
-// 	if _, err := cmd.CombinedOutput(); err != nil {
-// 		goto ErrContinue
-// 		t.Fatalf("Test_Client_Getdebtbyhash  error ：%s", err)
-// 	}
+	if err = json.Unmarshal([]byte(outStr), &txInfo); err != nil {
+		return
+	}
+	timeout := time.After(time.Second * 300)
+	finish := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-timeout:
+				finish <- true
+				return
+			default:
+				cmd = exec.Command(common.CmdClient, "getdebtbyhash", "--hash", txInfo.Hash, "--address", common.ServertwoAddr)
+				if _, err := cmd.CombinedOutput(); err == nil {
+					finish <- true
+				}
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
+	<-finish
 
-// 	cmd = exec.Command(common.CmdClient, "getdebtbyhash", txInfo.Hash, "--address", common.ServertwoAddr)
-// 	if _, err := cmd.CombinedOutput(); err == nil {
-// 		t.Fatalf("Test_Client_Getdebtbyhash  error ：empty hex string")
-// 	}
-// }
+	cmd = exec.Command(common.CmdClient, "getdebtbyhash", txInfo.Hash, "--address", common.ServertwoAddr)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("Test_Client_Getdebtbyhash  flag is not specified for value")
+	}
+}
 
 func Test_Client_Getdebtbyhash0x(t *testing.T) {
 	cmd := exec.Command(common.CmdClient, "getdebtbyhash", "--hash", "0x")
