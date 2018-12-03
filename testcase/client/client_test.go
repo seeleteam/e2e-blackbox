@@ -553,7 +553,7 @@ func Test_Client_SaveKey_Invalid_FileNameValue_Empty(t *testing.T) {
 
 	_, errStr := out.String(), outErr.String()
 
-	if !strings.Contains(errStr, "invalid key file path") {
+	if !strings.Contains(errStr, "please specify the key file path") {
 		t.Fatalf("Test_Client_SaveKey_Invalid_FileNameValue_Empty,savekey should return error with empty filename: %s", errStr)
 	}
 }
