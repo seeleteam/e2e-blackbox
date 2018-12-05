@@ -395,7 +395,7 @@ func GenerateTime(minutes int64) int64 {
 	return time.Now().Unix() + minutes*60
 }
 
-func DeployContractAndSendTx(t *testing.T) (string, string, []string, error) {
+func DeployContractAndSendTx(t *testing.T) (string, string, []interface{}, error) {
 	contract, err := ioutil.ReadFile("../contract/simplestorage/SimpleEvent.bin")
 	if err != nil {
 		return "", "", nil, fmt.Errorf("DeployContractAndSendTx read contract failed %s", err.Error())
@@ -504,11 +504,14 @@ func DeployContractAndSendTx(t *testing.T) (string, string, []string, error) {
 	if receipt1.Failed {
 		return "", "", nil, errors.New("DeployContractAndSendTx tx operation fault")
 	}
-	var topics []string
+	var topics []interface{}
 	for _, log := range receipt1.Logs {
 		l := log.(map[string]interface{})
-		topic := l["topic"].(string)
-		topics = append(topics, topic)
+		topicslice, ok := l["topics"]
+		if !ok {
+			return "", "", nil, errors.New("DeployContractAndSendTx topics not found in logs")
+		}
+		topics = append(topics, topicslice.([]interface{})...)
 	}
 	if len(topics) != 1 {
 		return "", "", nil, errors.New("DeployContractAndSendTx returns log number is not 1")
