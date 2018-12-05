@@ -2059,7 +2059,7 @@ func Test_Client_GetLogs_Invalid_Length_Contract(t *testing.T) {
 	}
 	errContract := "0xaaaaaaaaaaaaaaaaaaaaa"
 	for _, topic := range topics {
-		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic, "--address", common.ServerAddr)
+		cmd := exec.Command(common.CmdClient, "getlogs", "--height", height, "--contract", errContract, "--topic", topic.(string), "--address", common.ServerAddr)
 		if _, err := cmd.CombinedOutput(); err == nil {
 			t.Fatalf("Test_Client_GetLogs_Invalid_Length_Contract return ok")
 		}
