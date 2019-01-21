@@ -34,7 +34,8 @@ const (
 	SenderName = "reporter"
 	CC         = "CC@email.com"
 	Receivers  = "receiver@email.com"
-	Host       = "smtp.exmail.qq.com:25"
+	Host       = "smtp-mail.outlook.com:587"
+	//Host       = "smtp.exmail.qq.com:25"
 
 	StartHour = 04
 	StartMin  = 00
